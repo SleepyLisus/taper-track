@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0a0c10">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Taper Track - Jackdaw War Chest</title>
+  <title>Jackdaw War Chest</title>
   
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Jackdaw War Chest","short_name":"Jackdaw","start_url":".","display":"standalone","background_color":"#0a0c10","theme_color":"#0a0c10"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Jackdaw War Chest","short_name":"Jackdaw","start_url":".","display":"standalone","background_color":"#0a0c10","theme_color":"#0a0c10","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏴‍☠️</text></svg>","sizes":"192x192 512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
 
   <style>
     :root {
@@ -46,7 +47,6 @@
       transition: background-color 0.1s ease;
     }
 
-    /* Screen shake on broadside impact */
     body.ship-broadside-shake {
       animation: deckRumble 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     }
@@ -163,7 +163,6 @@
       color: var(--text-muted);
     }
 
-    /* Gun Deck Card & Grid */
     .gundeck-card {
       padding: 16px 18px;
       background: #11141a;
@@ -234,7 +233,6 @@
       color: var(--accent-gold);
     }
 
-    /* Muzzle Flash & Smoke Elements */
     .muzzle-flash {
       position: absolute;
       top: -24px;
@@ -261,7 +259,6 @@
       filter: blur(0.5px);
     }
 
-    /* Recoil, Flash & Blast Animations */
     @keyframes heavyCannonRecoil {
       0% {
         transform: translateY(0) scale(1);
@@ -334,7 +331,6 @@
       animation: smokeDrift 0.85s ease-out 0.12s forwards;
     }
 
-    /* Timer card */
     .timer-card {
       text-align: center;
       padding: 20px 20px;
@@ -358,7 +354,6 @@
     .status-locked { color: var(--accent-red); }
     .status-ready { color: var(--accent-green); }
 
-    /* The Broadside Button */
     .btn-log {
       position: relative;
       width: 100%;
@@ -492,7 +487,6 @@
 <body>
 
   <div class="container">
-    <!-- Plunder / War Chest Card -->
     <div class="card bounty-card">
       <div class="title">
         <span>WAR CHEST PLUNDER</span>
@@ -508,44 +502,36 @@
       <div class="sub-stat" id="pirateRank">Rank: Powder Monkey (0% loot secured)</div>
     </div>
 
-    <!-- Daily Pirate Dispatch Quote Card -->
     <div class="card quote-card">
       <div id="dailyQuoteText">"Loading Captain's orders..."</div>
       <div class="quote-author" id="dailyQuoteAuthor">Quarterdeck Dispatch</div>
     </div>
 
-    <!-- Visual Gun Deck Card -->
     <div class="card gundeck-card">
       <div class="title">
         <span id="gundeckTitle">BROADSIDE BATTERY</span>
         <span class="pirate-tag" id="phaseSubTag">WEEK 1 • DAY 1 OF 9</span>
       </div>
-      <div class="cannon-grid" id="cannonGrid">
-        <!-- Rendered dynamically -->
-      </div>
+      <div class="cannon-grid" id="cannonGrid"></div>
     </div>
 
-    <!-- Watch Timer Card -->
     <div class="card timer-card">
       <div class="title"><span>QUARTERDECK HOURGLASS</span></div>
       <div class="timer-display" id="timerClock">00:00</div>
       <div class="timer-status" id="timerStatus">READY TO BOARD</div>
     </div>
 
-    <!-- Fiery Broadside Button -->
     <button class="btn-log btn-ready" id="logBtn" onclick="handleLog()">
       <span id="btnMainText">💣 FIRE CANNONS</span>
       <span class="btn-sub" id="btnSub">CANNONS PRIMED & READY</span>
     </button>
 
-    <!-- Helm Controls -->
     <div class="actions">
       <button class="btn-link" onclick="undoLast()">Belay Last Stick</button>
       <button class="btn-link" onclick="toggleLogs()">Ship's Log</button>
       <button class="btn-link" onclick="resetAllData()" style="grid-column: span 2;">Scuttle & Reset</button>
     </div>
 
-    <!-- Ship's Log Drawer -->
     <div class="card" id="logDrawer" style="display: none;">
       <div class="title"><span>CAPTAIN'S LOG (TODAY)</span></div>
       <div class="log-list" id="logEntries"></div>
@@ -553,6 +539,17 @@
   </div>
 
   <script>
+    // Inline Service Worker: Forces Chrome to trigger native standalone PWA installation
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => clients.claim());
+        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+    }
+
     const BASELINE_DAILY = 15;
     const PACK_PRICE = 2450;
     const STICKS_PER_PACK = 20;
@@ -589,7 +586,6 @@
     const KEY_START_DATE = 'taper_start_date';
     const KEY_LOGS = 'taper_logs';
 
-    // Production start date anchored to midnight of Wednesday Nov 4, 2026
     let startDateStr = localStorage.getItem(KEY_START_DATE);
     if (!startDateStr) {
       const now = new Date();
@@ -611,11 +607,6 @@
       return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
     }
 
-    // Production schedule & real intervals:
-    // Days 0..8  (9 days): Week 1 (10 sticks/day, 90 min interval)
-    // Days 9..15 (7 days): Week 2 (6 sticks/day, 150 min interval)
-    // Days 16..22 (7 days): Week 3 (3 sticks/day, 240 min interval)
-    // Day 23+    (Fri Nov 27): Full Zero Protocol (Lockdown)
     function getPhaseConfig() {
       const dayIdx = getDayIndex();
 
@@ -819,12 +810,10 @@
         }
       }
 
-      // Hull rumble
       document.body.classList.remove('ship-broadside-shake');
       void document.body.offsetWidth;
       document.body.classList.add('ship-broadside-shake');
 
-      // Heavy recoil, blast & smoke on current slot
       const targetSlotNum = todayLogs.length + 1;
       const slotEl = document.getElementById(`cannon-slot-${targetSlotNum}`);
       if (slotEl) {
@@ -834,7 +823,6 @@
       logs.push(now);
       localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
       
-      // Haptic recoil feedback
       if (navigator.vibrate) navigator.vibrate([120, 40, 160, 30, 80]);
 
       renderLogList();
