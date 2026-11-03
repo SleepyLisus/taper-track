@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Taper Track</title>
+  
+  <!-- Web App Manifest embedded via Data URI -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Taper Track","short_name":"Taper","start_url":".","display":"standalone","background_color":"#121212","theme_color":"#121212"}'>
+
+  <style>
+    :root {
+      --bg: #0d0f12;
+      --card-bg: #161a20;
+      --card-border: #222730;
+      --accent-green: #2ecc71;
+      --accent-orange: #f39c12;
+      --accent-red: #e74c3c;
+      --accent-blue: #3498db;
+      --text: #f0f3f6;
+      --text-muted: #8b949e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 16px 40px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+
+    .title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .savings-val {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: var(--accent-green);
+      letter-spacing: -0.5px;
+    }
+
+    .sub-stat {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .row-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .stat-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Timer card */
+    .timer-card {
+      text-align: center;
+      padding: 24px 20px;
+      align-items: center;
+    }
+
+    .timer-display {
+      font-size: 3.2rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      margin: 12px 0 6px;
+      color: var(--text);
+    }
+
+    .timer-status {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .status-locked { color: var(--accent-red); }
+    .status-ready { color: var(--accent-green); }
+
+    /* Button */
+    .btn-log {
+      width: 100%;
+      padding: 20px;
+      border-radius: 18px;
+      border: none;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .btn-ready {
+      background: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .btn-ready:active {
+      transform: scale(0.97);
+    }
+
+    .btn-locked {
+      background: #20252e;
+      color: var(--text-muted);
+      cursor: not-allowed;
+      border: 1px solid #2d333f;
+    }
+
+    .btn-sub {
+      font-size: 0.75rem;
+      font-weight: 400;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    /* Action bar */
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 8px;
+    }
+
+    /* Logs list */
+    .log-list {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 6px 0;
+      border-bottom: 1px solid #1c2128;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Total Savings Card -->
+    <div class="card">
+      <div class="title">Net Money Retained</div>
+      <div class="savings-val" id="totalSavings">0 Ft</div>
+      <div class="sub-stat" id="sticksAvoided">0 sticks avoided vs 15/day baseline</div>
+    </div>
+
+    <!-- Daily Progress -->
+    <div class="row-stats">
+      <div class="stat-box">
+        <div class="title">Today's Sticks</div>
+        <div class="stat-val" id="todayCount">0 <span style="font-size:0.9rem; color:var(--text-muted);" id="todayLimit">/ 10</span></div>
+      </div>
+      <div class="stat-box">
+        <div class="title">Current Phase</div>
+        <div class="stat-val" id="phaseLabel" style="font-size: 1.15rem; color: var(--accent-orange);">Week 1</div>
+      </div>
+    </div>
+
+    <!-- Countdown Timer Card -->
+    <div class="card timer-card">
+      <div class="title">Next Allowed Session</div>
+      <div class="timer-display" id="timerClock">00:00</div>
+      <div class="timer-status" id="timerStatus">LOCKOUT ACTIVE</div>
+    </div>
+
+    <!-- Action Log Button -->
+    <button class="btn-log btn-ready" id="logBtn" onclick="handleLog()">
+      <span>LOG STICK</span>
+      <span class="btn-sub" id="btnSub">Ready for session</span>
+    </button>
+
+    <!-- Secondary Actions -->
+    <div class="actions">
+      <button class="btn-link" onclick="undoLast()">Undo Last</button>
+      <button class="btn-link" onclick="toggleLogs()">View Today's Log</button>
+      <button class="btn-link" onclick="resetAllData()">Reset App</button>
+    </div>
+
+    <!-- Hidden Log Drawer -->
+    <div class="card" id="logDrawer" style="display: none;">
+      <div class="title">Today's Timestamps</div>
+      <div class="log-list" id="logEntries"></div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration constants
+    const BASELINE_DAILY = 15;
+    const PACK_PRICE = 2450;
+    const STICKS_PER_PACK = 20;
+    const PRICE_PER_STICK = PACK_PRICE / STICKS_PER_PACK; // 122.5 Ft
+
+    // Storage keys
+    const KEY_START_TIME = 'taper_start_time';
+    const KEY_LOGS = 'taper_logs';
+
+    // State initialization
+    let startTime = localStorage.getItem(KEY_START_TIME);
+    if (!startTime) {
+      startTime = Date.now();
+      localStorage.setItem(KEY_START_TIME, startTime);
+    } else {
+      startTime = parseInt(startTime, 10);
+    }
+
+    let logs = JSON.parse(localStorage.getItem(KEY_LOGS) || '[]');
+
+    // Taper Phase definition based on days elapsed since start
+    function getPhaseConfig() {
+      const elapsedDays = Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24));
+      
+      if (elapsedDays < 7) {
+        return { label: "Week 1", limit: 10, intervalMin: 90 };
+      } else if (elapsedDays < 14) {
+        return { label: "Week 2", limit: 6, intervalMin: 150 };
+      } else if (elapsedDays < 24) {
+        return { label: "Week 3", limit: 3, intervalMin: 240 };
+      } else {
+        return { label: "Zero Days", limit: 0, intervalMin: Infinity };
+      }
+    }
+
+    function getTodayLogs() {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      return logs.filter(ts => ts >= startOfDay.getTime());
+    }
+
+    function getLastLog() {
+      return logs.length > 0 ? logs[logs.length - 1] : null;
+    }
+
+    // UI Updates
+    function updateUI() {
+      const now = Date.now();
+      const phase = getPhaseConfig();
+      const todayLogs = getTodayLogs();
+      const lastLog = getLastLog();
+
+      // 1. Savings Calculation
+      // Continuous baseline: (15 sticks * 122.5 Ft / day) elapsed
+      const daysElapsedExact = (now - startTime) / (1000 * 60 * 60 * 24);
+      const baselineCostIncurred = daysElapsedExact * (BASELINE_DAILY * PRICE_PER_STICK);
+      const actualCostIncurred = logs.length * PRICE_PER_STICK;
+      const netSavings = Math.max(0, Math.round(baselineCostIncurred - actualCostIncurred));
+      
+      const baselineSticksExpected = Math.round(daysElapsedExact * BASELINE_DAILY);
+      const avoidedSticks = Math.max(0, baselineSticksExpected - logs.length);
+
+      document.getElementById('totalSavings').innerText = netSavings.toLocaleString() + ' Ft';
+      document.getElementById('sticksAvoided').innerText = `${avoidedSticks} sticks avoided vs baseline`;
+
+      // 2. Today Count & Phase
+      document.getElementById('todayCount').innerHTML = `${todayLogs.length} <span style="font-size:0.9rem; color:var(--text-muted);">/ ${phase.limit}</span>`;
+      document.getElementById('phaseLabel').innerText = phase.label;
+
+      // 3. Interval & Countdown Timer
+      const timerDisplay = document.getElementById('timerClock');
+      const timerStatus = document.getElementById('timerStatus');
+      const logBtn = document.getElementById('logBtn');
+      const btnSub = document.getElementById('btnSub');
+
+      if (phase.limit === 0) {
+        timerDisplay.innerText = "00:00";
+        timerStatus.innerText = "ZERO PROTOCOL ACTIVE";
+        timerStatus.className = "timer-status status-ready";
+        logBtn.className = "btn-log btn-locked";
+        btnSub.innerText = "Daily smoking ended";
+        return;
+      }
+
+      if (!lastLog) {
+        timerDisplay.innerText = "00:00";
+        timerStatus.innerText = "READY";
+        timerStatus.className = "timer-status status-ready";
+        logBtn.className = "btn-log btn-ready";
+        btnSub.innerText = "Ready for session";
+        return;
+      }
+
+      const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
+      const diffMs = nextAllowedTime - now;
+
+      if (diffMs > 0) {
+        // Still in lockout
+        const totalSec = Math.ceil(diffMs / 1000);
+        const mins = Math.floor(totalSec / 60);
+        const secs = totalSec % 60;
+        timerDisplay.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        timerStatus.innerText = "LOCKOUT ACTIVE";
+        timerStatus.className = "timer-status status-locked";
+
+        logBtn.className = "btn-log btn-locked";
+        btnSub.innerText = `Wait until timer hits 00:00`;
+      } else {
+        // Window open
+        timerDisplay.innerText = "00:00";
+        timerStatus.innerText = "READY";
+        timerStatus.className = "timer-status status-ready";
+
+        logBtn.className = "btn-log btn-ready";
+        btnSub.innerText = `Within daily quota (${todayLogs.length}/${phase.limit})`;
+      }
+    }
+
+    function handleLog() {
+      const now = Date.now();
+      const phase = getPhaseConfig();
+      const lastLog = getLastLog();
+
+      if (phase.limit === 0) return;
+
+      // Check if button is tapped during lockout
+      if (lastLog) {
+        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
+        if (now < nextAllowedTime) {
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+          return;
+        }
+      }
+
+      // Log confirmed
+      logs.push(now);
+      localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
+      if (navigator.vibrate) navigator.vibrate(80);
+
+      renderLogList();
+      updateUI();
+    }
+
+    function undoLast() {
+      if (logs.length === 0) return;
+      if (confirm("Remove the most recent logged stick?")) {
+        logs.pop();
+        localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
+        renderLogList();
+        updateUI();
+      }
+    }
+
+    function toggleLogs() {
+      const drawer = document.getElementById('logDrawer');
+      drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
+      renderLogList();
+    }
+
+    function renderLogList() {
+      const listEl = document.getElementById('logEntries');
+      const todayLogs = getTodayLogs().reverse();
+      if (todayLogs.length === 0) {
+        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No sticks logged today yet.</div>';
+        return;
+      }
+      listEl.innerHTML = todayLogs.map((ts, idx) => {
+        const d = new Date(ts);
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `<div class="log-item"><span>Stick #${todayLogs.length - idx}</span><span>${timeStr}</span></div>`;
+      }).join('');
+    }
+
+    function resetAllData() {
+      if (confirm("Reset start date and all logs back to zero?")) {
+        localStorage.clear();
+        startTime = Date.now();
+        localStorage.setItem(KEY_START_TIME, startTime);
+        logs = [];
+        updateUI();
+        renderLogList();
+      }
+    }
+
+    // Refresh UI every second for accurate countdown
+    setInterval(updateUI, 1000);
+    updateUI();
+  </script>
+</body>
+</html>
