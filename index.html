@@ -7,10 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Taper Track - Jackdaw War Chest</title>
-  
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3f4-200d-2620-fe0f.png">
+  <title>Jackdaw War Chest</title>
+  <link id="dynamic-manifest" rel="manifest">
 
   <style>
     :root {
@@ -69,6 +67,20 @@
       gap: 14px;
     }
 
+    /* Native Install Banner */
+    #installBanner {
+      display: none;
+      background: linear-gradient(90deg, #d35400, #f39c12);
+      color: #090b0e;
+      font-weight: 800;
+      padding: 12px 16px;
+      border-radius: 12px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+      cursor: pointer;
+    }
+
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -120,6 +132,19 @@
       color: var(--accent-gold-bright);
       font-weight: 700;
       font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-fullscreen {
+      background: #1c222c;
+      border: 1px solid rgba(241, 196, 15, 0.4);
+      color: var(--accent-gold-bright);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 0.8rem;
+      cursor: pointer;
     }
 
     .savings-row {
@@ -261,29 +286,16 @@
     }
 
     @keyframes heavyCannonRecoil {
-      0% {
-        transform: translateY(0) scale(1);
-        border-color: rgba(241, 196, 15, 0.5);
-      }
+      0% { transform: translateY(0) scale(1); border-color: rgba(241, 196, 15, 0.5); }
       15% {
         transform: translateY(12px) scale(0.82) rotate(-3deg);
         border-color: #ff3800;
         background: radial-gradient(circle, #ff5722 0%, #151922 80%);
         box-shadow: 0 0 35px rgba(255, 71, 26, 0.9), inset 0 0 18px #ffeb3b;
       }
-      45% {
-        transform: translateY(-5px) scale(1.05) rotate(1deg);
-        border-color: #ff9800;
-      }
-      75% {
-        transform: translateY(3px) scale(0.95);
-      }
-      100% {
-        transform: translateY(0) scale(0.92);
-        border-color: #171b22;
-        background: #0d0f14;
-        opacity: 0.35;
-      }
+      45% { transform: translateY(-5px) scale(1.05) rotate(1deg); border-color: #ff9800; }
+      75% { transform: translateY(3px) scale(0.95); }
+      100% { transform: translateY(0) scale(0.92); border-color: #171b22; background: #0d0f14; opacity: 0.35; }
     }
 
     @keyframes muzzleFireBurst {
@@ -303,13 +315,8 @@
       animation: heavyCannonRecoil 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards !important;
     }
 
-    .recoil-active .muzzle-flash {
-      animation: muzzleFireBurst 0.38s ease-out forwards;
-    }
-
-    .recoil-active .smoke-puff {
-      animation: smokeDrift 0.85s ease-out 0.12s forwards;
-    }
+    .recoil-active .muzzle-flash { animation: muzzleFireBurst 0.38s ease-out forwards; }
+    .recoil-active .smoke-puff { animation: smokeDrift 0.85s ease-out 0.12s forwards; }
 
     .timer-card {
       text-align: center;
@@ -441,9 +448,7 @@
       text-align: center;
     }
 
-    .btn-link:active {
-      background: #1c212a;
-    }
+    .btn-link:active { background: #1c212a; }
 
     .log-list {
       max-height: 180px;
@@ -467,10 +472,19 @@
 <body>
 
   <div class="container">
+    <!-- In-App Install Banner (Appears automatically when Chrome allows PWA install) -->
+    <div id="installBanner" onclick="triggerInstall()">
+      <span>⚓ INSTALL JACKDAW APP</span>
+      <span style="font-size: 0.75rem; background:#090b0e; color:#f1c40f; padding:4px 8px; border-radius:6px;">INSTALL</span>
+    </div>
+
     <div class="card bounty-card">
       <div class="title">
         <span>WAR CHEST PLUNDER</span>
-        <span class="pirate-tag">🏴‍☠️ THE JACKDAW</span>
+        <span class="pirate-tag">
+          🏴‍☠️ THE JACKDAW
+          <button class="btn-fullscreen" onclick="toggleFullScreen()" title="Fullscreen Mode">⛶</button>
+        </span>
       </div>
       <div class="savings-row">
         <div class="savings-val" id="totalSavings">0 Ft</div>
@@ -519,13 +533,79 @@
   </div>
 
   <script>
-    // Real Service Worker registration for PWA installability
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log('Service Worker Registered'))
-          .catch(err => console.log('SW registration failed:', err));
-      });
+    // 1. Generate real PNG icons via HTML5 Canvas so Android WebAPK doesn't fail on missing/SVG icons
+    (function setupPWA() {
+      function generatePngIcon(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#090b0e';
+        ctx.fillRect(0, 0, size, size);
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = size * 0.04;
+        ctx.strokeRect(size * 0.06, size * 0.06, size * 0.88, size * 0.88);
+        ctx.font = `${Math.floor(size * 0.55)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🏴‍☠️', size / 2, size / 2 + size * 0.04);
+        return canvas.toDataURL('image/png');
+      }
+
+      const icon192 = generatePngIcon(192);
+      const icon512 = generatePngIcon(512);
+      const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+
+      const manifestObj = {
+        name: "Jackdaw War Chest",
+        short_name: "Jackdaw",
+        id: baseUrl,
+        start_url: baseUrl,
+        scope: baseUrl,
+        display: "standalone",
+        background_color: "#090b0e",
+        theme_color: "#090b0e",
+        icons: [
+          { src: icon192, sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: icon512, sizes: "512x512", type: "image/png", purpose: "any" }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+      document.getElementById('dynamic-manifest').setAttribute('href', URL.createObjectURL(manifestBlob));
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
+    })();
+
+    // 2. Intercept Chrome's native install prompt and show an in-app button
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').style.display = 'flex';
+    });
+
+    async function triggerInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        document.getElementById('installBanner').style.display = 'none';
+      }
+      deferredPrompt = null;
+    }
+
+    // 3. Hardware Fullscreen Toggle (Hides Chrome URL bar immediately even in a normal shortcut)
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
     }
 
     const BASELINE_DAILY = 15;
@@ -535,30 +615,30 @@
     const BOUNTY_GOAL = 20000;
 
     const PIRATE_QUOTES = [
-      /* Day 1 */  "The fog is thick and the crew is unruly. Ten shots in the locker, lad. Make every broadside count.",
-      /* Day 2 */  "A smooth sea never made a skilled mariner. If your hands wander toward the cartridge, steer into the gale.",
-      /* Day 3 */  "The Spanish patrol didn't spot us. First weekend voyage on strict rations—double the watch on deck.",
-      /* Day 4 */  "Dead men tell no tales, and bored sailors make poor decisions. Find a task for your hands afore the devil finds one for ye.",
-      /* Day 5 */  "Look at the horizon, not the empty powder kegs. Five days in and the Jackdaw is still afloat.",
-      /* Day 6 */  "Work week ahead. When the landlubbers step outside to burn their coin, remain steady at the helm.",
-      /* Day 7 */  "One full week carved into the mast. Five avoided shots a day adds up to a heavy chest of gold.",
-      /* Day 8 */  "The wind shifts. Two days remain before the quartermaster cuts our rations to single digits. Steel your nerves.",
-      /* Day 9 */  "Final day of ten. Feast on what ye have, Captain—tomorrow the true voyage begins.",
-      /* Day 10 */ "Six cannon balls. That is all the powder in the hold today. Delay the first salvo until high noon.",
-      /* Day 11 */ "A weekend with light stores is a test of iron. Drink your grog, keep the cannons cool, and eye the bounty.",
-      /* Day 12 */ "Halfway across the Spanish Main. The war chest is groaning with real coin that never reached the Governor's pockets.",
-      /* Day 13 */ "The phantom urge is nothing but a siren’s song. Plug your ears with wax and steer straight.",
-      /* Day 14 */ "Two weeks at sea. Your lungs take in the ocean spray without wheezing like a ruptured bellows.",
-      /* Day 15 */ "Six shots felt impossible fourteen days ago. Today it's just another routine watch. Steady as she goes.",
-      /* Day 16 */ "Prepare the decks. Tomorrow we enter the doldrums: three rations and three rations alone.",
-      /* Day 17 */ "Three shots. Morning is banned. One for the midday sun, one for the dogwatch, one before turning in.",
-      /* Day 18 */ "The fog clears and Nassau draws near. Every craving today is just a boarding party ye have to repel.",
-      /* Day 19 */ "Over 15,000 Ft sitting locked in the hold. You are buying your own freedom from the tobacco merchants.",
-      /* Day 20 */ "Four days till Zero. The cravings bark, but they have no teeth left. Stand your ground.",
-      /* Day 21 */ "Look aft at the wake you left behind. Hundreds of avoided sticks rotting at the bottom of the sea.",
-      /* Day 22 */ "Forty-eight hours to landfall. The crew is quiet. Clean the ship's brass and prep the quarterdeck.",
-      /* Day 23 */ "The Eve of Nassau. Fire the final stick into the dark water tonight, lock the holder in irons, and take the helm.",
-      /* Day 24+*/ "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Edward Kenway—drop anchor and claim the prize."
+      "The fog is thick and the crew is unruly. Ten shots in the locker, lad. Make every broadside count.",
+      "A smooth sea never made a skilled mariner. If your hands wander toward the cartridge, steer into the gale.",
+      "The Spanish patrol didn't spot us. First weekend voyage on strict rations—double the watch on deck.",
+      "Dead men tell no tales, and bored sailors make poor decisions. Find a task for your hands afore the devil finds one for ye.",
+      "Look at the horizon, not the empty powder kegs. Five days in and the Jackdaw is still afloat.",
+      "Work week ahead. When the landlubbers step outside to burn their coin, remain steady at the helm.",
+      "One full week carved into the mast. Five avoided shots a day adds up to a heavy chest of gold.",
+      "The wind shifts. Two days remain before the quartermaster cuts our rations to single digits. Steel your nerves.",
+      "Final day of ten. Feast on what ye have, Captain—tomorrow the true voyage begins.",
+      "Six cannon balls. That is all the powder in the hold today. Delay the first salvo until high noon.",
+      "A weekend with light stores is a test of iron. Drink your grog, keep the cannons cool, and eye the bounty.",
+      "Halfway across the Spanish Main. The war chest is groaning with real coin that never reached the Governor's pockets.",
+      "The phantom urge is nothing but a siren’s song. Plug your ears with wax and steer straight.",
+      "Two weeks at sea. Your lungs take in the ocean spray without wheezing like a ruptured bellows.",
+      "Six shots felt impossible fourteen days ago. Today it's just another routine watch. Steady as she goes.",
+      "Prepare the decks. Tomorrow we enter the doldrums: three rations and three rations alone.",
+      "Three shots. Morning is banned. One for the midday sun, one for the dogwatch, one before turning in.",
+      "The fog clears and Nassau draws near. Every craving today is just a boarding party ye have to repel.",
+      "Over 15,000 Ft sitting locked in the hold. You are buying your own freedom from the tobacco merchants.",
+      "Four days till Zero. The cravings bark, but they have no teeth left. Stand your ground.",
+      "Look aft at the wake you left behind. Hundreds of avoided sticks rotting at the bottom of the sea.",
+      "Forty-eight hours to landfall. The crew is quiet. Clean the ship's brass and prep the quarterdeck.",
+      "The Eve of Nassau. Fire the final stick into the dark water tonight, lock the holder in irons, and take the helm.",
+      "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Edward Kenway—drop anchor and claim the prize."
     ];
 
     const KEY_START_DATE = 'taper_start_date';
@@ -589,37 +669,13 @@
       const dayIdx = getDayIndex();
 
       if (dayIdx < 9) {
-        return { 
-          label: "Week 1", 
-          limit: 10, 
-          intervalMin: 90, 
-          dayInPhase: dayIdx + 1, 
-          totalPhaseDays: 9 
-        };
+        return { label: "Week 1", limit: 10, intervalMin: 90, dayInPhase: dayIdx + 1, totalPhaseDays: 9 };
       } else if (dayIdx < 16) {
-        return { 
-          label: "Week 2", 
-          limit: 6, 
-          intervalMin: 150, 
-          dayInPhase: (dayIdx - 9) + 1, 
-          totalPhaseDays: 7 
-        };
+        return { label: "Week 2", limit: 6, intervalMin: 150, dayInPhase: (dayIdx - 9) + 1, totalPhaseDays: 7 };
       } else if (dayIdx < 23) {
-        return { 
-          label: "Week 3", 
-          limit: 3, 
-          intervalMin: 240, 
-          dayInPhase: (dayIdx - 16) + 1, 
-          totalPhaseDays: 7 
-        };
+        return { label: "Week 3", limit: 3, intervalMin: 240, dayInPhase: (dayIdx - 16) + 1, totalPhaseDays: 7 };
       } else {
-        return { 
-          label: "Zero Protocol", 
-          limit: 0, 
-          intervalMin: Infinity, 
-          dayInPhase: (dayIdx - 23) + 1, 
-          totalPhaseDays: "∞" 
-        };
+        return { label: "Zero Protocol", limit: 0, intervalMin: Infinity, dayInPhase: (dayIdx - 23) + 1, totalPhaseDays: "∞" };
       }
     }
 
@@ -675,182 +731,4 @@
       for (let i = 1; i <= limit; i++) {
         const isFired = i <= firedCount;
         const icon = isFired ? '💨' : '💣';
-        const statusClass = isFired ? 'cannon-slot fired' : 'cannon-slot loaded';
-        html += `
-          <div class="${statusClass}" id="cannon-slot-${i}">
-            <div class="muzzle-flash">💥</div>
-            <div class="smoke-puff">💨</div>
-            <div class="cannon-icon-wrap">
-              <div class="cannon-icon">${icon}</div>
-            </div>
-            <div class="cannon-num">#${i}</div>
-          </div>
-        `;
-      }
-      grid.innerHTML = html;
-    }
-
-    function updateUI() {
-      const now = getNow();
-      const dayIdx = getDayIndex();
-      const phase = getPhaseConfig();
-      const todayLogs = getTodayLogs();
-      const lastLog = getLastLog();
-
-      const quoteIdx = Math.min(dayIdx, PIRATE_QUOTES.length - 1);
-      document.getElementById('dailyQuoteText').innerText = `"${PIRATE_QUOTES[quoteIdx]}"`;
-      document.getElementById('dailyQuoteAuthor').innerText = `Voyage Day ${dayIdx + 1} • Quarterdeck Orders`;
-
-      const netSavings = calculateTotalSavings();
-      document.getElementById('totalSavings').innerText = netSavings.toLocaleString() + ' Ft';
-      
-      const pct = Math.min(100, Math.round((netSavings / BOUNTY_GOAL) * 100));
-      document.getElementById('progressBar').style.width = pct + '%';
-      document.getElementById('pirateRank').innerText = getPirateRankText(netSavings);
-
-      const firedCount = todayLogs.length;
-      renderCannonDeck(firedCount, phase.limit);
-      
-      document.getElementById('phaseSubTag').innerText = phase.totalPhaseDays === "∞"
-        ? `${phase.label.toUpperCase()} • FREEDOM`
-        : `${phase.label.toUpperCase()} • DAY ${phase.dayInPhase} OF ${phase.totalPhaseDays}`;
-
-      const timerDisplay = document.getElementById('timerClock');
-      const timerStatus = document.getElementById('timerStatus');
-      const logBtn = document.getElementById('logBtn');
-      const btnMainText = document.getElementById('btnMainText');
-      const btnSub = document.getElementById('btnSub');
-
-      if (firedCount >= phase.limit && phase.limit > 0) {
-        timerDisplay.innerText = "00:00";
-        timerStatus.innerText = "ALL CANNONS SPENT";
-        timerStatus.className = "timer-status status-locked";
-
-        logBtn.className = "btn-log btn-limit-reached";
-        btnMainText.innerText = "ALL SHOTS FIRED";
-        btnSub.innerText = "Hold the line until tomorrow's sunrise";
-        return;
-      }
-
-      if (phase.limit === 0) {
-        timerDisplay.innerText = "00:00";
-        timerStatus.innerText = "THE JACKDAW SAILS CLEAN";
-        timerStatus.className = "timer-status status-ready";
-        logBtn.className = "btn-log btn-locked";
-        btnMainText.innerText = "ZERO PROTOCOL ENGAGED";
-        btnSub.innerText = "Controller active. Sink the legendary ships.";
-        return;
-      }
-
-      if (lastLog) {
-        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
-        const diffMs = nextAllowedTime - now;
-
-        if (diffMs > 0) {
-          const totalSec = Math.ceil(diffMs / 1000);
-          const mins = Math.floor(totalSec / 60);
-          const secs = totalSec % 60;
-          timerDisplay.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-          timerStatus.innerText = "HOURGLASS DRAINING (LOCKOUT)";
-          timerStatus.className = "timer-status status-locked";
-
-          logBtn.className = "btn-log btn-locked";
-          btnMainText.innerText = "SWABBING BARRELS...";
-          btnSub.innerText = "Wait until the powder cools";
-          return;
-        }
-      }
-
-      timerDisplay.innerText = "00:00";
-      timerStatus.innerText = "READY TO BOARD";
-      timerStatus.className = "timer-status status-ready";
-      logBtn.className = "btn-log btn-ready";
-      btnMainText.innerText = "💣 FIRE CANNONS";
-      btnSub.innerText = `Cannon #${firedCount + 1} loaded & primed`;
-    }
-
-    function handleLog() {
-      const now = getNow();
-      const phase = getPhaseConfig();
-      const todayLogs = getTodayLogs();
-      const lastLog = getLastLog();
-
-      if (todayLogs.length >= phase.limit) {
-        if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-        return;
-      }
-
-      if (lastLog) {
-        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
-        if (now < nextAllowedTime) {
-          if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
-          return;
-        }
-      }
-
-      document.body.classList.remove('ship-broadside-shake');
-      void document.body.offsetWidth;
-      document.body.classList.add('ship-broadside-shake');
-
-      const targetSlotNum = todayLogs.length + 1;
-      const slotEl = document.getElementById(`cannon-slot-${targetSlotNum}`);
-      if (slotEl) {
-        slotEl.classList.add('recoil-active');
-      }
-
-      logs.push(now);
-      localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
-      
-      if (navigator.vibrate) navigator.vibrate([120, 40, 160, 30, 80]);
-
-      renderLogList();
-      setTimeout(updateUI, 420);
-    }
-
-    function undoLast() {
-      if (logs.length === 0) return;
-      if (confirm("Belay the last cannon shot from the ship's log?")) {
-        logs.pop();
-        localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
-        renderLogList();
-        updateUI();
-      }
-    }
-
-    function toggleLogs() {
-      const drawer = document.getElementById('logDrawer');
-      drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
-      renderLogList();
-    }
-
-    function renderLogList() {
-      const listEl = document.getElementById('logEntries');
-      const todayLogs = getTodayLogs().reverse();
-      if (todayLogs.length === 0) {
-        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No shots fired today, Captain.</div>';
-        return;
-      }
-      listEl.innerHTML = todayLogs.map((ts, idx) => {
-        const d = new Date(ts);
-        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return `<div class="log-item"><span>Cannon #${todayLogs.length - idx}</span><span>${timeStr}</span></div>`;
-      }).join('');
-    }
-
-    function resetAllData() {
-      if (confirm("Scuttle the ship and reset all plunder, battery, and voyages back to Day 1?")) {
-        localStorage.clear();
-        const now = new Date();
-        const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-        localStorage.setItem(KEY_START_DATE, anchor.toISOString());
-        logs = [];
-        updateUI();
-        renderLogList();
-      }
-    }
-
-    setInterval(updateUI, 1000);
-    updateUI();
-  </script>
-</body>
-</html>
+        const statusClass = isFired
