@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#121212">
+  <meta name="theme-color" content="#0a0c10">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Taper Track</title>
+  <title>Taper Track - Jackdaw War Chest</title>
   
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Taper Track","short_name":"Taper","start_url":".","display":"standalone","background_color":"#121212","theme_color":"#121212"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Jackdaw War Chest","short_name":"Jackdaw","start_url":".","display":"standalone","background_color":"#0a0c10","theme_color":"#0a0c10"}'>
 
   <style>
     :root {
-      --bg: #0d0f12;
-      --card-bg: #161a20;
-      --card-border: #222730;
+      --bg: #090b0e;
+      --card-bg: #12151b;
+      --card-border: #1d222b;
+      --accent-gold: #f39c12;
+      --accent-gold-bright: #f1c40f;
       --accent-green: #2ecc71;
-      --accent-orange: #f39c12;
-      --accent-red: #e74c3c;
-      --accent-blue: #3498db;
+      --accent-orange: #d35400;
+      --accent-red: #c0392b;
+      --accent-cyan: #00cec9;
       --text: #f0f3f6;
-      --text-muted: #8b949e;
+      --text-muted: #7f8c8d;
     }
 
     * {
@@ -39,7 +41,23 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      padding: 20px 16px 40px;
+      padding: 16px 14px 40px;
+      overflow-x: hidden;
+      transition: background-color 0.1s ease;
+    }
+
+    /* Screen shake on broadside impact */
+    body.ship-broadside-shake {
+      animation: deckRumble 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes deckRumble {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      15% { transform: translate(-3px, 4px) rotate(-0.5deg); }
+      30% { transform: translate(4px, -3px) rotate(0.6deg); }
+      45% { transform: translate(-4px, 2px) rotate(-0.4deg); }
+      60% { transform: translate(3px, -2px) rotate(0.3deg); }
+      75% { transform: translate(-2px, 1px) rotate(-0.2deg); }
     }
 
     .container {
@@ -47,7 +65,7 @@
       max-width: 420px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .card {
@@ -57,48 +75,85 @@
       padding: 18px 20px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+
+    .bounty-card {
+      border: 1px solid rgba(241, 196, 15, 0.35);
+      background: linear-gradient(180deg, #181c24 0%, #101318 100%);
+      box-shadow: 0 6px 20px rgba(241, 196, 15, 0.08);
+    }
+
+    .quote-card {
+      border-left: 3px solid var(--accent-gold);
+      background: #11141a;
+      padding: 14px 16px;
+      font-style: italic;
+      color: #d1d8e0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .quote-author {
+      font-style: normal;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+      margin-top: 6px;
+      font-weight: 700;
     }
 
     .title {
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.4px;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pirate-tag {
+      color: var(--accent-gold-bright);
+      font-weight: 700;
+      font-size: 0.75rem;
     }
 
     .savings-row {
       display: flex;
       align-items: baseline;
       gap: 8px;
+      margin: 4px 0 8px;
     }
 
     .savings-val {
-      font-size: 2.2rem;
+      font-size: 2.3rem;
       font-weight: 800;
-      color: var(--accent-green);
+      color: var(--accent-gold-bright);
       letter-spacing: -0.5px;
+      text-shadow: 0 2px 10px rgba(241, 196, 15, 0.2);
     }
 
     .savings-target {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: var(--text-muted);
     }
 
     .progress-bar-bg {
       width: 100%;
-      height: 8px;
-      background: #222730;
-      border-radius: 4px;
-      margin: 10px 0 6px;
+      height: 10px;
+      background: #1c222c;
+      border-radius: 5px;
       overflow: hidden;
+      margin-bottom: 8px;
     }
 
     .progress-bar-fill {
       height: 100%;
-      background: var(--accent-green);
+      background: linear-gradient(90deg, #d35400, #f1c40f);
       width: 0%;
       transition: width 0.3s ease;
     }
@@ -108,105 +163,300 @@
       color: var(--text-muted);
     }
 
-    .row-stats {
+    /* Gun Deck Card & Grid */
+    .gundeck-card {
+      padding: 16px 18px;
+      background: #11141a;
+      border: 1px solid #1e2430;
+      position: relative;
+    }
+
+    .cannon-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 10px;
     }
 
-    .stat-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 14px 16px;
+    .cannon-slot {
+      position: relative;
+      background: #181d26;
+      border: 1px solid #28303d;
+      border-radius: 12px;
+      height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .stat-val {
-      font-size: 1.5rem;
+    .cannon-slot.loaded {
+      background: linear-gradient(180deg, #222938 0%, #151922 100%);
+      border-color: rgba(241, 196, 15, 0.5);
+      box-shadow: 0 0 12px rgba(241, 196, 15, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .cannon-slot.fired {
+      background: #0d0f14;
+      border-color: #171b22;
+      opacity: 0.35;
+      transform: scale(0.92);
+    }
+
+    .cannon-icon-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cannon-icon {
+      font-size: 1.55rem;
+      line-height: 1;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.6));
+      transition: transform 0.2s ease, filter 0.3s ease;
+    }
+
+    .cannon-slot.fired .cannon-icon {
+      filter: grayscale(100%) brightness(35%);
+    }
+
+    .cannon-num {
+      font-size: 0.65rem;
       font-weight: 700;
-      margin-top: 2px;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
+    .cannon-slot.loaded .cannon-num {
+      color: var(--accent-gold);
+    }
+
+    /* Muzzle Flash & Smoke Elements */
+    .muzzle-flash {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      font-size: 2.2rem;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 10;
+      filter: drop-shadow(0 0 14px #ff471a) drop-shadow(0 0 25px #ffb300);
+      opacity: 0;
+    }
+
+    .smoke-puff {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.4);
+      font-size: 1.6rem;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 9;
+      opacity: 0;
+      filter: blur(0.5px);
+    }
+
+    /* Recoil, Flash & Blast Animations */
+    @keyframes heavyCannonRecoil {
+      0% {
+        transform: translateY(0) scale(1);
+        border-color: rgba(241, 196, 15, 0.5);
+      }
+      15% {
+        transform: translateY(12px) scale(0.82) rotate(-3deg);
+        border-color: #ff3800;
+        background: radial-gradient(circle, #ff5722 0%, #151922 80%);
+        box-shadow: 0 0 35px rgba(255, 71, 26, 0.9), inset 0 0 18px #ffeb3b;
+      }
+      45% {
+        transform: translateY(-5px) scale(1.05) rotate(1deg);
+        border-color: #ff9800;
+      }
+      75% {
+        transform: translateY(3px) scale(0.95);
+      }
+      100% {
+        transform: translateY(0) scale(0.92);
+        border-color: #171b22;
+        background: #0d0f14;
+        opacity: 0.35;
+      }
+    }
+
+    @keyframes muzzleFireBurst {
+      0% {
+        transform: translateX(-50%) scale(0.3) rotate(0deg);
+        opacity: 1;
+      }
+      40% {
+        transform: translateX(-50%) scale(1.7) rotate(15deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) scale(2.2) translateY(-14px) rotate(30deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes smokeDrift {
+      0% {
+        transform: translateX(-50%) scale(0.6) translateY(0);
+        opacity: 0;
+      }
+      30% {
+        opacity: 0.9;
+        transform: translateX(-40%) scale(1.2) translateY(-10px);
+      }
+      70% {
+        opacity: 0.6;
+        transform: translateX(-60%) scale(1.7) translateY(-24px);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) scale(2.1) translateY(-36px);
+      }
+    }
+
+    .recoil-active {
+      animation: heavyCannonRecoil 0.75s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards !important;
+    }
+
+    .recoil-active .muzzle-flash {
+      animation: muzzleFireBurst 0.38s ease-out forwards;
+    }
+
+    .recoil-active .smoke-puff {
+      animation: smokeDrift 0.85s ease-out 0.12s forwards;
+    }
+
+    /* Timer card */
     .timer-card {
       text-align: center;
-      padding: 24px 20px;
+      padding: 20px 20px;
       align-items: center;
     }
 
     .timer-display {
-      font-size: 3.2rem;
+      font-size: 3.3rem;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
-      margin: 12px 0 6px;
+      margin: 8px 0 4px;
       color: var(--text);
     }
 
     .timer-status {
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
     }
 
     .status-locked { color: var(--accent-red); }
     .status-ready { color: var(--accent-green); }
 
+    /* The Broadside Button */
     .btn-log {
+      position: relative;
       width: 100%;
-      padding: 20px;
+      padding: 22px 18px;
       border-radius: 18px;
-      border: none;
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: 1.2px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: all 0.15s ease;
       touch-action: manipulation;
+      overflow: hidden;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn-ready {
-      background: var(--accent-blue);
+      background: linear-gradient(135deg, #c0392b 0%, #e67e22 50%, #f39c12 100%);
       color: #fff;
-      box-shadow: 0 4px 20px rgba(52, 152, 219, 0.4);
+      border: 1px solid rgba(241, 196, 15, 0.6);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 0 25px rgba(230, 126, 34, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+      animation: cannonPulse 2.5s infinite ease-in-out;
+    }
+
+    .btn-ready::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      transform: rotate(25deg);
+      animation: cannonGleam 4s infinite;
+    }
+
+    @keyframes cannonPulse {
+      0%, 100% {
+        box-shadow: 0 0 20px rgba(230, 126, 34, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 35px rgba(243, 156, 18, 0.75), inset 0 1px 4px rgba(255, 255, 255, 0.6);
+        transform: scale(1.015);
+      }
+    }
+
+    @keyframes cannonGleam {
+      0% { left: -60%; }
+      25%, 100% { left: 140%; }
     }
 
     .btn-ready:active {
-      transform: scale(0.97);
+      transform: scale(0.96) !important;
+      box-shadow: 0 0 10px rgba(230, 126, 34, 0.4) !important;
     }
 
     .btn-locked {
-      background: #20252e;
-      color: var(--text-muted);
+      background: #14171d;
+      color: #4b5360;
       cursor: not-allowed;
-      border: 1px solid #2d333f;
+      border: 1px solid #1f2530;
+      box-shadow: none;
+      animation: none;
+      text-shadow: none;
     }
 
     .btn-limit-reached {
-      background: rgba(231, 76, 60, 0.15);
+      background: rgba(192, 57, 43, 0.12);
       color: var(--accent-red);
       cursor: not-allowed;
-      border: 1px solid var(--accent-red);
+      border: 1px solid rgba(192, 57, 43, 0.6);
+      box-shadow: none;
+      animation: none;
+      text-shadow: none;
     }
 
     .btn-sub {
-      font-size: 0.75rem;
-      font-weight: 400;
-      opacity: 0.8;
-      margin-top: 4px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      opacity: 0.9;
+      margin-top: 5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     .actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      padding: 0 4px;
+      padding: 0 2px;
     }
 
     .btn-link {
-      background: #161a20;
+      background: #12151b;
       border: 1px solid var(--card-border);
       border-radius: 8px;
       color: var(--text-muted);
@@ -217,12 +467,7 @@
     }
 
     .btn-link:active {
-      background: #222730;
-    }
-
-    .btn-test {
-      color: var(--accent-orange);
-      border-color: rgba(243, 156, 18, 0.4);
+      background: #1c212a;
     }
 
     .log-list {
@@ -240,62 +485,69 @@
       font-size: 0.8rem;
       color: var(--text-muted);
       padding: 6px 0;
-      border-bottom: 1px solid #1c2128;
+      border-bottom: 1px solid #1a1f27;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- Money Saved Tracker -->
-    <div class="card">
-      <div class="title">Money Saved</div>
+    <!-- Plunder / War Chest Card -->
+    <div class="card bounty-card">
+      <div class="title">
+        <span>WAR CHEST PLUNDER</span>
+        <span class="pirate-tag">🏴‍☠️ THE JACKDAW</span>
+      </div>
       <div class="savings-row">
         <div class="savings-val" id="totalSavings">0 Ft</div>
-        <div class="savings-target">/ 20,000 Ft</div>
+        <div class="savings-target">/ 20,000 Ft BOUNTY</div>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progressBar"></div>
       </div>
-      <div class="sub-stat" id="sticksAvoided">0 sticks avoided vs 15/day baseline</div>
+      <div class="sub-stat" id="pirateRank">Rank: Powder Monkey (0% loot secured)</div>
     </div>
 
-    <!-- Daily Progress -->
-    <div class="row-stats">
-      <div class="stat-box">
-        <div class="title">Today's Sticks</div>
-        <div class="stat-val" id="todayCount">0 <span style="font-size:0.9rem; color:var(--text-muted);" id="todayLimit">/ 10</span></div>
+    <!-- Daily Pirate Dispatch Quote Card -->
+    <div class="card quote-card">
+      <div id="dailyQuoteText">"Loading Captain's orders..."</div>
+      <div class="quote-author" id="dailyQuoteAuthor">Quarterdeck Dispatch</div>
+    </div>
+
+    <!-- Visual Gun Deck Card -->
+    <div class="card gundeck-card">
+      <div class="title">
+        <span id="gundeckTitle">BROADSIDE BATTERY</span>
+        <span class="pirate-tag" id="phaseSubTag">WEEK 1 • DAY 1 OF 9</span>
       </div>
-      <div class="stat-box">
-        <div class="title">Current Phase</div>
-        <div class="stat-val" id="phaseLabel" style="font-size: 1.15rem; color: var(--accent-orange);">Week 1</div>
+      <div class="cannon-grid" id="cannonGrid">
+        <!-- Rendered dynamically -->
       </div>
     </div>
 
-    <!-- Countdown Timer Card -->
+    <!-- Watch Timer Card -->
     <div class="card timer-card">
-      <div class="title">Next Allowed Session</div>
+      <div class="title"><span>QUARTERDECK HOURGLASS</span></div>
       <div class="timer-display" id="timerClock">00:00</div>
-      <div class="timer-status" id="timerStatus">READY</div>
+      <div class="timer-status" id="timerStatus">READY TO BOARD</div>
     </div>
 
-    <!-- Action Log Button -->
+    <!-- Fiery Broadside Button -->
     <button class="btn-log btn-ready" id="logBtn" onclick="handleLog()">
-      <span>LOG STICK</span>
-      <span class="btn-sub" id="btnSub">Ready for session</span>
+      <span id="btnMainText">💣 FIRE CANNONS</span>
+      <span class="btn-sub" id="btnSub">CANNONS PRIMED & READY</span>
     </button>
 
-    <!-- Testing & Navigation Actions -->
+    <!-- Helm Controls -->
     <div class="actions">
-      <button class="btn-link" onclick="undoLast()">Undo Last</button>
-      <button class="btn-link" onclick="toggleLogs()">View Logs</button>
-      <button class="btn-link btn-test" onclick="simulateNextDay()">+ Next Day (Test)</button>
-      <button class="btn-link" onclick="resetAllData()">Reset App</button>
+      <button class="btn-link" onclick="undoLast()">Belay Last Stick</button>
+      <button class="btn-link" onclick="toggleLogs()">Ship's Log</button>
+      <button class="btn-link" onclick="resetAllData()" style="grid-column: span 2;">Scuttle & Reset</button>
     </div>
 
-    <!-- Hidden Log Drawer -->
+    <!-- Ship's Log Drawer -->
     <div class="card" id="logDrawer" style="display: none;">
-      <div class="title">Today's Timestamps</div>
+      <div class="title"><span>CAPTAIN'S LOG (TODAY)</span></div>
       <div class="log-list" id="logEntries"></div>
     </div>
   </div>
@@ -305,107 +557,224 @@
     const PACK_PRICE = 2450;
     const STICKS_PER_PACK = 20;
     const PRICE_PER_STICK = PACK_PRICE / STICKS_PER_PACK; // 122.5 Ft
-    const GAME_TARGET = 20000;
+    const BOUNTY_GOAL = 20000;
 
-    const KEY_START_TIME = 'taper_start_time';
-    const KEY_TIME_OFFSET = 'taper_time_offset';
+    const PIRATE_QUOTES = [
+      /* Day 1 */  "The fog is thick and the crew is unruly. Ten shots in the locker, lad. Make every broadside count.",
+      /* Day 2 */  "A smooth sea never made a skilled mariner. If your hands wander toward the cartridge, steer into the gale.",
+      /* Day 3 */  "The Spanish patrol didn't spot us. First weekend voyage on strict rations—double the watch on deck.",
+      /* Day 4 */  "Dead men tell no tales, and bored sailors make poor decisions. Find a task for your hands afore the devil finds one for ye.",
+      /* Day 5 */  "Look at the horizon, not the empty powder kegs. Five days in and the Jackdaw is still afloat.",
+      /* Day 6 */  "Work week ahead. When the landlubbers step outside to burn their coin, remain steady at the helm.",
+      /* Day 7 */  "One full week carved into the mast. Five avoided shots a day adds up to a heavy chest of gold.",
+      /* Day 8 */  "The wind shifts. Two days remain before the quartermaster cuts our rations to single digits. Steel your nerves.",
+      /* Day 9 */  "Final day of ten. Feast on what ye have, Captain—tomorrow the true voyage begins.",
+      /* Day 10 */ "Six cannon balls. That is all the powder in the hold today. Delay the first salvo until high noon.",
+      /* Day 11 */ "A weekend with light stores is a test of iron. Drink your grog, keep the cannons cool, and eye the bounty.",
+      /* Day 12 */ "Halfway across the Spanish Main. The war chest is groaning with real coin that never reached the Governor's pockets.",
+      /* Day 13 */ "The phantom urge is nothing but a siren’s song. Plug your ears with wax and steer straight.",
+      /* Day 14 */ "Two weeks at sea. Your lungs take in the ocean spray without wheezing like a ruptured bellows.",
+      /* Day 15 */ "Six shots felt impossible fourteen days ago. Today it's just another routine watch. Steady as she goes.",
+      /* Day 16 */ "Prepare the decks. Tomorrow we enter the doldrums: three rations and three rations alone.",
+      /* Day 17 */ "Three shots. Morning is banned. One for the midday sun, one for the dogwatch, one before turning in.",
+      /* Day 18 */ "The fog clears and Nassau draws near. Every craving today is just a boarding party ye have to repel.",
+      /* Day 19 */ "Over 15,000 Ft sitting locked in the hold. You are buying your own freedom from the tobacco merchants.",
+      /* Day 20 */ "Four days till Zero. The cravings bark, but they have no teeth left. Stand your ground.",
+      /* Day 21 */ "Look aft at the wake you left behind. Hundreds of avoided sticks rotting at the bottom of the sea.",
+      /* Day 22 */ "Forty-eight hours to landfall. The crew is quiet. Clean the ship's brass and prep the quarterdeck.",
+      /* Day 23 */ "The Eve of Nassau. Fire the final stick into the dark water tonight, lock the holder in irons, and take the helm.",
+      /* Day 24+*/ "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Edward Kenway—drop anchor and claim the prize."
+    ];
+
+    const KEY_START_DATE = 'taper_start_date';
     const KEY_LOGS = 'taper_logs';
 
-    let timeOffset = parseInt(localStorage.getItem(KEY_TIME_OFFSET) || '0', 10);
-
-    function getNow() {
-      return Date.now() + timeOffset;
+    // Production start date anchored to midnight of Wednesday Nov 4, 2026
+    let startDateStr = localStorage.getItem(KEY_START_DATE);
+    if (!startDateStr) {
+      const now = new Date();
+      const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      startDateStr = anchor.toISOString();
+      localStorage.setItem(KEY_START_DATE, startDateStr);
     }
-
-    let startTime = localStorage.getItem(KEY_START_TIME);
-    if (!startTime) {
-      startTime = getNow();
-      localStorage.setItem(KEY_START_TIME, startTime);
-    } else {
-      startTime = parseInt(startTime, 10);
-    }
+    const anchorDate = new Date(startDateStr);
 
     let logs = JSON.parse(localStorage.getItem(KEY_LOGS) || '[]');
 
-    // Interval set to 1 second for fast testing
+    function getNow() {
+      return Date.now();
+    }
+
+    function getDayIndex() {
+      const now = new Date();
+      const diffMs = now.getTime() - anchorDate.getTime();
+      return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+    }
+
+    // Production schedule & real intervals:
+    // Days 0..8  (9 days): Week 1 (10 sticks/day, 90 min interval)
+    // Days 9..15 (7 days): Week 2 (6 sticks/day, 150 min interval)
+    // Days 16..22 (7 days): Week 3 (3 sticks/day, 240 min interval)
+    // Day 23+    (Fri Nov 27): Full Zero Protocol (Lockdown)
     function getPhaseConfig() {
-      const elapsedDays = Math.floor((getNow() - startTime) / (1000 * 60 * 60 * 24));
-      
-      if (elapsedDays < 7) {
-        return { label: "Week 1", limit: 10, intervalSec: 1 };
-      } else if (elapsedDays < 14) {
-        return { label: "Week 2", limit: 6, intervalSec: 1 };
-      } else if (elapsedDays < 24) {
-        return { label: "Week 3", limit: 3, intervalSec: 1 };
+      const dayIdx = getDayIndex();
+
+      if (dayIdx < 9) {
+        return { 
+          label: "Week 1", 
+          limit: 10, 
+          intervalMin: 90, 
+          dayInPhase: dayIdx + 1, 
+          totalPhaseDays: 9 
+        };
+      } else if (dayIdx < 16) {
+        return { 
+          label: "Week 2", 
+          limit: 6, 
+          intervalMin: 150, 
+          dayInPhase: (dayIdx - 9) + 1, 
+          totalPhaseDays: 7 
+        };
+      } else if (dayIdx < 23) {
+        return { 
+          label: "Week 3", 
+          limit: 3, 
+          intervalMin: 240, 
+          dayInPhase: (dayIdx - 16) + 1, 
+          totalPhaseDays: 7 
+        };
       } else {
-        return { label: "Zero Protocol", limit: 0, intervalSec: Infinity };
+        return { 
+          label: "Zero Protocol", 
+          limit: 0, 
+          intervalMin: Infinity, 
+          dayInPhase: (dayIdx - 23) + 1, 
+          totalPhaseDays: "∞" 
+        };
       }
     }
 
     function getTodayLogs() {
-      const simulatedNow = new Date(getNow());
-      const startOfDay = new Date(simulatedNow.getFullYear(), simulatedNow.getMonth(), simulatedNow.getDate()).getTime();
-      return logs.filter(ts => ts >= startOfDay);
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
+      const endOfDay = startOfDay + (24 * 60 * 60 * 1000);
+      return logs.filter(ts => ts >= startOfDay && ts < endOfDay);
     }
 
     function getLastLog() {
-      return logs.length > 0 ? logs[logs.length - 1] : null;
+      const today = getTodayLogs();
+      return today.length > 0 ? today[today.length - 1] : null;
+    }
+
+    function calculateTotalSavings() {
+      const currentDayIdx = getDayIndex();
+      let totalAvoidedSticks = 0;
+
+      for (let d = 0; d < currentDayIdx; d++) {
+        const dayStart = anchorDate.getTime() + (d * 24 * 60 * 60 * 1000);
+        const dayEnd = dayStart + (24 * 60 * 60 * 1000);
+        const daySticks = logs.filter(ts => ts >= dayStart && ts < dayEnd).length;
+        
+        const savedToday = Math.max(0, BASELINE_DAILY - daySticks);
+        totalAvoidedSticks += savedToday;
+      }
+
+      return Math.round(totalAvoidedSticks * PRICE_PER_STICK);
+    }
+
+    function getPirateRankText(savedFt) {
+      const pct = Math.min(100, Math.round((savedFt / BOUNTY_GOAL) * 100));
+      if (pct >= 100) return `👑 Master & Commander of the Jackdaw (100% - Plunder Secured!)`;
+      if (pct >= 75) return `🗡️ First Mate (${pct}% - Nassau Harbor in Sight)`;
+      if (pct >= 50) return `⚓ Bosun (${pct}% - Halfway across the Spanish Main)`;
+      if (pct >= 25) return `💣 Master Gunner (${pct}% - Broadside Primed)`;
+      return `🦜 Powder Monkey (${pct}% booty locked in chest)`;
+    }
+
+    function renderCannonDeck(firedCount, limit) {
+      const grid = document.getElementById('cannonGrid');
+      
+      if (limit === 0) {
+        grid.style.gridTemplateColumns = "1fr";
+        grid.innerHTML = '<div style="text-align:center; padding: 16px; color: var(--accent-green); font-weight:700; font-size:0.95rem;">🕊️ ALL CANNONS RETIRED TO PORT • ZERO PROTOCOL ACTIVE</div>';
+        return;
+      }
+
+      grid.style.gridTemplateColumns = limit === 3 ? "repeat(3, 1fr)" : (limit === 6 ? "repeat(3, 1fr)" : "repeat(5, 1fr)");
+      
+      let html = '';
+      for (let i = 1; i <= limit; i++) {
+        const isFired = i <= firedCount;
+        const icon = isFired ? '💨' : '💣';
+        const statusClass = isFired ? 'cannon-slot fired' : 'cannon-slot loaded';
+        html += `
+          <div class="${statusClass}" id="cannon-slot-${i}">
+            <div class="muzzle-flash">💥</div>
+            <div class="smoke-puff">💨</div>
+            <div class="cannon-icon-wrap">
+              <div class="cannon-icon">${icon}</div>
+            </div>
+            <div class="cannon-num">#${i}</div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
     }
 
     function updateUI() {
       const now = getNow();
+      const dayIdx = getDayIndex();
       const phase = getPhaseConfig();
       const todayLogs = getTodayLogs();
       const lastLog = getLastLog();
 
-      // 1. Money Saved & Progress Bar
-      const daysElapsedExact = (now - startTime) / (1000 * 60 * 60 * 24);
-      const baselineCostIncurred = daysElapsedExact * (BASELINE_DAILY * PRICE_PER_STICK);
-      const actualCostIncurred = logs.length * PRICE_PER_STICK;
-      const netSavings = Math.max(0, Math.round(baselineCostIncurred - actualCostIncurred));
-      
-      const baselineSticksExpected = Math.round(daysElapsedExact * BASELINE_DAILY);
-      const avoidedSticks = Math.max(0, baselineSticksExpected - logs.length);
+      const quoteIdx = Math.min(dayIdx, PIRATE_QUOTES.length - 1);
+      document.getElementById('dailyQuoteText').innerText = `"${PIRATE_QUOTES[quoteIdx]}"`;
+      document.getElementById('dailyQuoteAuthor').innerText = `Voyage Day ${dayIdx + 1} • Quarterdeck Orders`;
 
+      const netSavings = calculateTotalSavings();
       document.getElementById('totalSavings').innerText = netSavings.toLocaleString() + ' Ft';
       
-      const pct = Math.min(100, Math.round((netSavings / GAME_TARGET) * 100));
+      const pct = Math.min(100, Math.round((netSavings / BOUNTY_GOAL) * 100));
       document.getElementById('progressBar').style.width = pct + '%';
-      document.getElementById('sticksAvoided').innerText = `${avoidedSticks} sticks avoided (${pct}% of game target)`;
+      document.getElementById('pirateRank').innerText = getPirateRankText(netSavings);
 
-      // 2. Count & Phase
-      document.getElementById('todayCount').innerHTML = `${todayLogs.length} <span style="font-size:0.9rem; color:var(--text-muted);">/ ${phase.limit}</span>`;
-      document.getElementById('phaseLabel').innerText = phase.label;
+      const firedCount = todayLogs.length;
+      renderCannonDeck(firedCount, phase.limit);
+      
+      document.getElementById('phaseSubTag').innerText = phase.totalPhaseDays === "∞"
+        ? `${phase.label.toUpperCase()} • FREEDOM`
+        : `${phase.label.toUpperCase()} • DAY ${phase.dayInPhase} OF ${phase.totalPhaseDays}`;
 
       const timerDisplay = document.getElementById('timerClock');
       const timerStatus = document.getElementById('timerStatus');
       const logBtn = document.getElementById('logBtn');
+      const btnMainText = document.getElementById('btnMainText');
       const btnSub = document.getElementById('btnSub');
 
-      // Case A: Daily Limit Reached (Hard lock)
-      if (todayLogs.length >= phase.limit && phase.limit > 0) {
+      if (firedCount >= phase.limit && phase.limit > 0) {
         timerDisplay.innerText = "00:00";
-        timerStatus.innerText = "DAILY LIMIT REACHED";
+        timerStatus.innerText = "ALL CANNONS SPENT";
         timerStatus.className = "timer-status status-locked";
 
         logBtn.className = "btn-log btn-limit-reached";
-        btnSub.innerText = "Locked until tomorrow morning";
+        btnMainText.innerText = "ALL SHOTS FIRED";
+        btnSub.innerText = "Hold the line until tomorrow's sunrise";
         return;
       }
 
-      // Case B: Zero Days reached
       if (phase.limit === 0) {
         timerDisplay.innerText = "00:00";
-        timerStatus.innerText = "ZERO PROTOCOL ACTIVE";
+        timerStatus.innerText = "THE JACKDAW SAILS CLEAN";
         timerStatus.className = "timer-status status-ready";
         logBtn.className = "btn-log btn-locked";
-        btnSub.innerText = "Smoking phase complete";
+        btnMainText.innerText = "ZERO PROTOCOL ENGAGED";
+        btnSub.innerText = "Controller active. Sink the legendary ships.";
         return;
       }
 
-      // Case C: Waiting for interval countdown
       if (lastLog) {
-        const nextAllowedTime = lastLog + (phase.intervalSec * 1000);
+        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
         const diffMs = nextAllowedTime - now;
 
         if (diffMs > 0) {
@@ -413,21 +782,22 @@
           const mins = Math.floor(totalSec / 60);
           const secs = totalSec % 60;
           timerDisplay.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-          timerStatus.innerText = "LOCKOUT ACTIVE";
+          timerStatus.innerText = "HOURGLASS DRAINING (LOCKOUT)";
           timerStatus.className = "timer-status status-locked";
 
           logBtn.className = "btn-log btn-locked";
-          btnSub.innerText = `Wait until timer hits 00:00`;
+          btnMainText.innerText = "SWABBING BARRELS...";
+          btnSub.innerText = "Wait until the powder cools";
           return;
         }
       }
 
-      // Case D: Ready
       timerDisplay.innerText = "00:00";
-      timerStatus.innerText = "READY";
+      timerStatus.innerText = "READY TO BOARD";
       timerStatus.className = "timer-status status-ready";
       logBtn.className = "btn-log btn-ready";
-      btnSub.innerText = `Available (${todayLogs.length}/${phase.limit} logged)`;
+      btnMainText.innerText = "💣 FIRE CANNONS";
+      btnSub.innerText = `Cannon #${firedCount + 1} loaded & primed`;
     }
 
     function handleLog() {
@@ -436,40 +806,44 @@
       const todayLogs = getTodayLogs();
       const lastLog = getLastLog();
 
-      // Enforce hard daily cap
       if (todayLogs.length >= phase.limit) {
         if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
         return;
       }
 
-      // Enforce interval lockout
       if (lastLog) {
-        const nextAllowedTime = lastLog + (phase.intervalSec * 1000);
+        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
         if (now < nextAllowedTime) {
           if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
           return;
         }
       }
 
+      // Hull rumble
+      document.body.classList.remove('ship-broadside-shake');
+      void document.body.offsetWidth;
+      document.body.classList.add('ship-broadside-shake');
+
+      // Heavy recoil, blast & smoke on current slot
+      const targetSlotNum = todayLogs.length + 1;
+      const slotEl = document.getElementById(`cannon-slot-${targetSlotNum}`);
+      if (slotEl) {
+        slotEl.classList.add('recoil-active');
+      }
+
       logs.push(now);
       localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
-      if (navigator.vibrate) navigator.vibrate(80);
+      
+      // Haptic recoil feedback
+      if (navigator.vibrate) navigator.vibrate([120, 40, 160, 30, 80]);
 
       renderLogList();
-      updateUI();
-    }
-
-    function simulateNextDay() {
-      // Advance virtual clock by exactly 24 hours
-      timeOffset += 24 * 60 * 60 * 1000;
-      localStorage.setItem(KEY_TIME_OFFSET, timeOffset);
-      updateUI();
-      renderLogList();
+      setTimeout(updateUI, 420);
     }
 
     function undoLast() {
       if (logs.length === 0) return;
-      if (confirm("Remove the most recent logged stick?")) {
+      if (confirm("Belay the last cannon shot from the ship's log?")) {
         logs.pop();
         localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
         renderLogList();
@@ -487,18 +861,30 @@
       const listEl = document.getElementById('logEntries');
       const todayLogs = getTodayLogs().reverse();
       if (todayLogs.length === 0) {
-        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No sticks logged today yet.</div>';
+        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No shots fired today, Captain.</div>';
         return;
       }
       listEl.innerHTML = todayLogs.map((ts, idx) => {
         const d = new Date(ts);
-        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        return `<div class="log-item"><span>Stick #${todayLogs.length - idx}</span><span>${timeStr}</span></div>`;
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `<div class="log-item"><span>Cannon #${todayLogs.length - idx}</span><span>${timeStr}</span></div>`;
       }).join('');
     }
 
     function resetAllData() {
-      if (confirm("Reset everything (logs, dates, test offsets) back to zero?")) {
+      if (confirm("Scuttle the ship and reset all plunder, battery, and voyages back to Day 1?")) {
         localStorage.clear();
-        timeOffset = 0;
-        startTime
+        const now = new Date();
+        const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        localStorage.setItem(KEY_START_DATE, anchor.toISOString());
+        logs = [];
+        updateUI();
+        renderLogList();
+      }
+    }
+
+    setInterval(updateUI, 1000);
+    updateUI();
+  </script>
+</body>
+</html>
