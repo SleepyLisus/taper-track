@@ -34,15 +34,17 @@
       -webkit-user-select: none;
     }
 
-    body {
+    html, body {
       background-color: var(--bg);
       color: var(--text);
+      height: 100dvh;
+      width: 100%;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      padding: 16px 14px 40px;
-      overflow-x: hidden;
+      justify-content: space-between;
+      padding: 10px 12px 12px;
       transition: background-color 0.1s ease;
     }
 
@@ -62,67 +64,68 @@
     .container {
       width: 100%;
       max-width: 420px;
+      height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      justify-content: space-between;
+      gap: 8px;
     }
 
-    /* Native Install Banner */
     #installBanner {
       display: none;
       background: linear-gradient(90deg, #d35400, #f39c12);
       color: #090b0e;
       font-weight: 800;
-      padding: 12px 16px;
-      border-radius: 12px;
+      padding: 8px 14px;
+      border-radius: 10px;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+      font-size: 0.8rem;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 18px 20px;
+      border-radius: 14px;
+      padding: 12px 16px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.45);
     }
 
     .bounty-card {
       border: 1px solid rgba(241, 196, 15, 0.35);
       background: linear-gradient(180deg, #181c24 0%, #101318 100%);
-      box-shadow: 0 6px 20px rgba(241, 196, 15, 0.08);
     }
 
     .quote-card {
       border-left: 3px solid var(--accent-gold);
       background: #11141a;
-      padding: 14px 16px;
+      padding: 10px 14px;
       font-style: italic;
       color: #d1d8e0;
-      font-size: 0.88rem;
-      line-height: 1.45;
+      font-size: 0.8rem;
+      line-height: 1.35;
     }
 
     .quote-author {
       font-style: normal;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--accent-gold);
-      margin-top: 6px;
+      margin-top: 4px;
       font-weight: 700;
     }
 
     .title {
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 1.4px;
+      letter-spacing: 1.2px;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -131,31 +134,18 @@
     .pirate-tag {
       color: var(--accent-gold-bright);
       font-weight: 700;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-fullscreen {
-      background: #1c222c;
-      border: 1px solid rgba(241, 196, 15, 0.4);
-      color: var(--accent-gold-bright);
-      border-radius: 6px;
-      padding: 2px 7px;
-      font-size: 0.8rem;
-      cursor: pointer;
+      font-size: 0.7rem;
     }
 
     .savings-row {
       display: flex;
       align-items: baseline;
-      gap: 8px;
-      margin: 4px 0 8px;
+      gap: 6px;
+      margin: 2px 0 6px;
     }
 
     .savings-val {
-      font-size: 2.3rem;
+      font-size: 1.9rem;
       font-weight: 800;
       color: var(--accent-gold-bright);
       letter-spacing: -0.5px;
@@ -163,18 +153,18 @@
     }
 
     .savings-target {
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--text-muted);
     }
 
     .progress-bar-bg {
       width: 100%;
-      height: 10px;
+      height: 8px;
       background: #1c222c;
-      border-radius: 5px;
+      border-radius: 4px;
       overflow: hidden;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .progress-bar-fill {
@@ -185,30 +175,29 @@
     }
 
     .sub-stat {
-      font-size: 0.82rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
     }
 
     .gundeck-card {
-      padding: 16px 18px;
+      padding: 12px 14px;
       background: #11141a;
       border: 1px solid #1e2430;
-      position: relative;
     }
 
     .cannon-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-top: 10px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
     .cannon-slot {
       position: relative;
       background: #181d26;
       border: 1px solid #28303d;
-      border-radius: 12px;
-      height: 64px;
+      border-radius: 10px;
+      height: 52px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -220,7 +209,7 @@
     .cannon-slot.loaded {
       background: linear-gradient(180deg, #222938 0%, #151922 100%);
       border-color: rgba(241, 196, 15, 0.5);
-      box-shadow: 0 0 12px rgba(241, 196, 15, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 10px rgba(241, 196, 15, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.15);
     }
 
     .cannon-slot.fired {
@@ -238,10 +227,9 @@
     }
 
     .cannon-icon {
-      font-size: 1.55rem;
+      font-size: 1.3rem;
       line-height: 1;
-      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.6));
-      transition: transform 0.2s ease, filter 0.3s ease;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     }
 
     .cannon-slot.fired .cannon-icon {
@@ -249,10 +237,10 @@
     }
 
     .cannon-num {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 700;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .cannon-slot.loaded .cannon-num {
@@ -261,10 +249,10 @@
 
     .muzzle-flash {
       position: absolute;
-      top: -24px;
+      top: -20px;
       left: 50%;
       transform: translateX(-50%) scale(0);
-      font-size: 2.2rem;
+      font-size: 1.9rem;
       line-height: 1;
       pointer-events: none;
       z-index: 10;
@@ -274,41 +262,40 @@
 
     .smoke-puff {
       position: absolute;
-      top: -12px;
+      top: -10px;
       left: 50%;
       transform: translateX(-50%) scale(0.4);
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       line-height: 1;
       pointer-events: none;
       z-index: 9;
       opacity: 0;
-      filter: blur(0.5px);
     }
 
     @keyframes heavyCannonRecoil {
       0% { transform: translateY(0) scale(1); border-color: rgba(241, 196, 15, 0.5); }
       15% {
-        transform: translateY(12px) scale(0.82) rotate(-3deg);
+        transform: translateY(10px) scale(0.82) rotate(-3deg);
         border-color: #ff3800;
         background: radial-gradient(circle, #ff5722 0%, #151922 80%);
-        box-shadow: 0 0 35px rgba(255, 71, 26, 0.9), inset 0 0 18px #ffeb3b;
+        box-shadow: 0 0 30px rgba(255, 71, 26, 0.9), inset 0 0 14px #ffeb3b;
       }
-      45% { transform: translateY(-5px) scale(1.05) rotate(1deg); border-color: #ff9800; }
-      75% { transform: translateY(3px) scale(0.95); }
+      45% { transform: translateY(-4px) scale(1.05) rotate(1deg); border-color: #ff9800; }
+      75% { transform: translateY(2px) scale(0.95); }
       100% { transform: translateY(0) scale(0.92); border-color: #171b22; background: #0d0f14; opacity: 0.35; }
     }
 
     @keyframes muzzleFireBurst {
       0% { transform: translateX(-50%) scale(0.3) rotate(0deg); opacity: 1; }
-      40% { transform: translateX(-50%) scale(1.7) rotate(15deg); opacity: 1; }
-      100% { transform: translateX(-50%) scale(2.2) translateY(-14px) rotate(30deg); opacity: 0; }
+      40% { transform: translateX(-50%) scale(1.6) rotate(15deg); opacity: 1; }
+      100% { transform: translateX(-50%) scale(2.0) translateY(-12px) rotate(30deg); opacity: 0; }
     }
 
     @keyframes smokeDrift {
       0% { transform: translateX(-50%) scale(0.6) translateY(0); opacity: 0; }
-      30% { opacity: 0.9; transform: translateX(-40%) scale(1.2) translateY(-10px); }
-      70% { opacity: 0.6; transform: translateX(-60%) scale(1.7) translateY(-24px); }
-      100% { opacity: 0; transform: translateX(-50%) scale(2.1) translateY(-36px); }
+      30% { opacity: 0.9; transform: translateX(-40%) scale(1.1) translateY(-8px); }
+      70% { opacity: 0.6; transform: translateX(-60%) scale(1.5) translateY(-20px); }
+      100% { opacity: 0; transform: translateX(-50%) scale(1.9) translateY(-30px); }
     }
 
     .recoil-active {
@@ -320,20 +307,20 @@
 
     .timer-card {
       text-align: center;
-      padding: 20px 20px;
+      padding: 12px 16px;
       align-items: center;
     }
 
     .timer-display {
-      font-size: 3.3rem;
+      font-size: 2.5rem;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
-      margin: 8px 0 4px;
+      margin: 2px 0;
       color: var(--text);
     }
 
     .timer-status {
-      font-size: 0.88rem;
+      font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.8px;
     }
@@ -344,11 +331,11 @@
     .btn-log {
       position: relative;
       width: 100%;
-      padding: 22px 18px;
-      border-radius: 18px;
-      font-size: 1.3rem;
+      padding: 15px 16px;
+      border-radius: 16px;
+      font-size: 1.2rem;
       font-weight: 900;
-      letter-spacing: 1.2px;
+      letter-spacing: 1px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
@@ -364,7 +351,7 @@
       color: #fff;
       border: 1px solid rgba(241, 196, 15, 0.6);
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
-      box-shadow: 0 0 25px rgba(230, 126, 34, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 20px rgba(230, 126, 34, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.4);
       animation: cannonPulse 2.5s infinite ease-in-out;
     }
 
@@ -382,12 +369,12 @@
 
     @keyframes cannonPulse {
       0%, 100% {
-        box-shadow: 0 0 20px rgba(230, 126, 34, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 16px rgba(230, 126, 34, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         transform: scale(1);
       }
       50% {
-        box-shadow: 0 0 35px rgba(243, 156, 18, 0.75), inset 0 1px 4px rgba(255, 255, 255, 0.6);
-        transform: scale(1.015);
+        box-shadow: 0 0 28px rgba(243, 156, 18, 0.7), inset 0 1px 4px rgba(255, 255, 255, 0.6);
+        transform: scale(1.01);
       }
     }
 
@@ -398,7 +385,6 @@
 
     .btn-ready:active {
       transform: scale(0.96) !important;
-      box-shadow: 0 0 10px rgba(230, 126, 34, 0.4) !important;
     }
 
     .btn-locked {
@@ -408,7 +394,6 @@
       border: 1px solid #1f2530;
       box-shadow: none;
       animation: none;
-      text-shadow: none;
     }
 
     .btn-limit-reached {
@@ -418,23 +403,21 @@
       border: 1px solid rgba(192, 57, 43, 0.6);
       box-shadow: none;
       animation: none;
-      text-shadow: none;
     }
 
     .btn-sub {
-      font-size: 0.76rem;
+      font-size: 0.7rem;
       font-weight: 500;
       opacity: 0.9;
-      margin-top: 5px;
+      margin-top: 3px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
     }
 
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 0 2px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
     }
 
     .btn-link {
@@ -442,18 +425,41 @@
       border: 1px solid var(--card-border);
       border-radius: 8px;
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       cursor: pointer;
-      padding: 10px;
+      padding: 8px 4px;
       text-align: center;
     }
 
     .btn-link:active { background: #1c212a; }
 
+    /* Modal Overlay for Ship's Log so it never causes page scrolling */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 360px;
+      background: #12151b;
+      border: 1px solid rgba(241, 196, 15, 0.4);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      max-height: 70dvh;
+    }
+
     .log-list {
-      max-height: 180px;
       overflow-y: auto;
-      margin-top: 8px;
+      margin-top: 10px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -472,19 +478,15 @@
 <body>
 
   <div class="container">
-    <!-- In-App Install Banner (Appears automatically when Chrome allows PWA install) -->
     <div id="installBanner" onclick="triggerInstall()">
       <span>⚓ INSTALL JACKDAW APP</span>
-      <span style="font-size: 0.75rem; background:#090b0e; color:#f1c40f; padding:4px 8px; border-radius:6px;">INSTALL</span>
+      <span style="font-size: 0.7rem; background:#090b0e; color:#f1c40f; padding:3px 8px; border-radius:6px;">INSTALL</span>
     </div>
 
     <div class="card bounty-card">
       <div class="title">
         <span>WAR CHEST PLUNDER</span>
-        <span class="pirate-tag">
-          🏴‍☠️ THE JACKDAW
-          <button class="btn-fullscreen" onclick="toggleFullScreen()" title="Fullscreen Mode">⛶</button>
-        </span>
+        <span class="pirate-tag">🏴‍☠️ THE JACKDAW</span>
       </div>
       <div class="savings-row">
         <div class="savings-val" id="totalSavings">0 Ft</div>
@@ -521,19 +523,24 @@
     </button>
 
     <div class="actions">
-      <button class="btn-link" onclick="undoLast()">Belay Last Stick</button>
+      <button class="btn-link" onclick="undoLast()">Belay Last</button>
       <button class="btn-link" onclick="toggleLogs()">Ship's Log</button>
-      <button class="btn-link" onclick="resetAllData()" style="grid-column: span 2;">Scuttle & Reset</button>
+      <button class="btn-link" onclick="resetAllData()">Scuttle</button>
     </div>
+  </div>
 
-    <div class="card" id="logDrawer" style="display: none;">
-      <div class="title"><span>CAPTAIN'S LOG (TODAY)</span></div>
+  <!-- Pop-up Modal for Captain's Log -->
+  <div class="modal-overlay" id="logModal" onclick="toggleLogs()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="title">
+        <span>CAPTAIN'S LOG (TODAY)</span>
+        <span style="cursor:pointer; color:var(--accent-gold-bright);" onclick="toggleLogs()">✕ CLOSE</span>
+      </div>
       <div class="log-list" id="logEntries"></div>
     </div>
   </div>
 
   <script>
-    // 1. Generate real PNG icons via HTML5 Canvas so Android WebAPK doesn't fail on missing/SVG icons
     (function setupPWA() {
       function generatePngIcon(size) {
         const canvas = document.createElement('canvas');
@@ -581,7 +588,6 @@
       }
     })();
 
-    // 2. Intercept Chrome's native install prompt and show an in-app button
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -597,15 +603,6 @@
         document.getElementById('installBanner').style.display = 'none';
       }
       deferredPrompt = null;
-    }
-
-    // 3. Hardware Fullscreen Toggle (Hides Chrome URL bar immediately even in a normal shortcut)
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
     }
 
     const BASELINE_DAILY = 15;
@@ -721,7 +718,7 @@
       
       if (limit === 0) {
         grid.style.gridTemplateColumns = "1fr";
-        grid.innerHTML = '<div style="text-align:center; padding: 16px; color: var(--accent-green); font-weight:700; font-size:0.95rem;">🕊️ ALL CANNONS RETIRED TO PORT • ZERO PROTOCOL ACTIVE</div>';
+        grid.innerHTML = '<div style="text-align:center; padding: 12px; color: var(--accent-green); font-weight:700; font-size:0.85rem;">🕊️ ALL CANNONS RETIRED TO PORT • ZERO PROTOCOL ACTIVE</div>';
         return;
       }
 
@@ -874,8 +871,8 @@
     }
 
     function toggleLogs() {
-      const drawer = document.getElementById('logDrawer');
-      drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
+      const modal = document.getElementById('logModal');
+      modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
       renderLogList();
     }
 
@@ -883,7 +880,7 @@
       const listEl = document.getElementById('logEntries');
       const todayLogs = getTodayLogs().reverse();
       if (todayLogs.length === 0) {
-        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No shots fired today, Captain.</div>';
+        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); padding: 10px 0;">No shots fired today, Captain.</div>';
         return;
       }
       listEl.innerHTML = todayLogs.map((ts, idx) => {
