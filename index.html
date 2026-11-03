@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0a0c10">
+  <meta name="theme-color" content="#090b0e">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Jackdaw War Chest</title>
+  <title>Taper Track - Jackdaw War Chest</title>
   
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Jackdaw War Chest","short_name":"Jackdaw","start_url":".","display":"standalone","background_color":"#0a0c10","theme_color":"#0a0c10","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏴‍☠️</text></svg>","sizes":"192x192 512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f3f4-200d-2620-fe0f.png">
 
   <style>
     :root {
@@ -286,37 +287,16 @@
     }
 
     @keyframes muzzleFireBurst {
-      0% {
-        transform: translateX(-50%) scale(0.3) rotate(0deg);
-        opacity: 1;
-      }
-      40% {
-        transform: translateX(-50%) scale(1.7) rotate(15deg);
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(-50%) scale(2.2) translateY(-14px) rotate(30deg);
-        opacity: 0;
-      }
+      0% { transform: translateX(-50%) scale(0.3) rotate(0deg); opacity: 1; }
+      40% { transform: translateX(-50%) scale(1.7) rotate(15deg); opacity: 1; }
+      100% { transform: translateX(-50%) scale(2.2) translateY(-14px) rotate(30deg); opacity: 0; }
     }
 
     @keyframes smokeDrift {
-      0% {
-        transform: translateX(-50%) scale(0.6) translateY(0);
-        opacity: 0;
-      }
-      30% {
-        opacity: 0.9;
-        transform: translateX(-40%) scale(1.2) translateY(-10px);
-      }
-      70% {
-        opacity: 0.6;
-        transform: translateX(-60%) scale(1.7) translateY(-24px);
-      }
-      100% {
-        opacity: 0;
-        transform: translateX(-50%) scale(2.1) translateY(-36px);
-      }
+      0% { transform: translateX(-50%) scale(0.6) translateY(0); opacity: 0; }
+      30% { opacity: 0.9; transform: translateX(-40%) scale(1.2) translateY(-10px); }
+      70% { opacity: 0.6; transform: translateX(-60%) scale(1.7) translateY(-24px); }
+      100% { opacity: 0; transform: translateX(-50%) scale(2.1) translateY(-36px); }
     }
 
     .recoil-active {
@@ -539,15 +519,13 @@
   </div>
 
   <script>
-    // Inline Service Worker: Forces Chrome to trigger native standalone PWA installation
+    // Real Service Worker registration for PWA installability
     if ('serviceWorker' in navigator) {
-      const swCode = `
-        self.addEventListener('install', e => self.skipWaiting());
-        self.addEventListener('activate', e => clients.claim());
-        self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-      `;
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Service Worker Registered'))
+          .catch(err => console.log('SW registration failed:', err));
+      });
     }
 
     const BASELINE_DAILY = 15;
