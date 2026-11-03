@@ -433,7 +433,6 @@
 
     .btn-link:active { background: #1c212a; }
 
-    /* Modal Overlay for Ship's Log so it never causes page scrolling */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -529,7 +528,6 @@
     </div>
   </div>
 
-  <!-- Pop-up Modal for Captain's Log -->
   <div class="modal-overlay" id="logModal" onclick="toggleLogs()">
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="title">
@@ -638,17 +636,10 @@
       "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Edward Kenway—drop anchor and claim the prize."
     ];
 
-    const KEY_START_DATE = 'taper_start_date';
     const KEY_LOGS = 'taper_logs';
 
-    let startDateStr = localStorage.getItem(KEY_START_DATE);
-    if (!startDateStr) {
-      const now = new Date();
-      const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      startDateStr = anchor.toISOString();
-      localStorage.setItem(KEY_START_DATE, startDateStr);
-    }
-    const anchorDate = new Date(startDateStr);
+    // Hardcoded anchor to Wednesday, Nov 4, 2026 at 00:00:00 local time
+    const anchorDate = new Date(2026, 10, 4, 0, 0, 0);
 
     let logs = JSON.parse(localStorage.getItem(KEY_LOGS) || '[]');
 
@@ -659,11 +650,11 @@
     function getDayIndex() {
       const now = new Date();
       const diffMs = now.getTime() - anchorDate.getTime();
-      return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+      return Math.floor(diffMs / (1000 * 60 * 60 * 24));
     }
 
     function getPhaseConfig() {
-      const dayIdx = getDayIndex();
+      const dayIdx = Math.max(0, getDayIndex());
 
       if (dayIdx < 9) {
         return { label: "Week 1", limit: 10, intervalMin: 90, dayInPhase: dayIdx + 1, totalPhaseDays: 9 };
@@ -689,10 +680,11 @@
     }
 
     function calculateTotalSavings() {
-      const currentDayIdx = getDayIndex();
-      let totalAvoidedSticks = 0;
+      const rawDayIdx = getDayIndex();
+      if (rawDayIdx <= 0) return 0; // Pre-voyage (Tuesday) or Day 1 active = 0 banked
 
-      for (let d = 0; d < currentDayIdx; d++) {
+      let totalAvoidedSticks = 0;
+      for (let d = 0; d < rawDayIdx; d++) {
         const dayStart = anchorDate.getTime() + (d * 24 * 60 * 60 * 1000);
         const dayEnd = dayStart + (24 * 60 * 60 * 1000);
         const daySticks = logs.filter(ts => ts >= dayStart && ts < dayEnd).length;
@@ -745,14 +737,20 @@
 
     function updateUI() {
       const now = getNow();
-      const dayIdx = getDayIndex();
+      const rawDayIdx = getDayIndex();
+      const dayIdx = Math.max(0, rawDayIdx);
       const phase = getPhaseConfig();
       const todayLogs = getTodayLogs();
       const lastLog = getLastLog();
 
-      const quoteIdx = Math.min(dayIdx, PIRATE_QUOTES.length - 1);
-      document.getElementById('dailyQuoteText').innerText = `"${PIRATE_QUOTES[quoteIdx]}"`;
-      document.getElementById('dailyQuoteAuthor').innerText = `Voyage Day ${dayIdx + 1} • Quarterdeck Orders`;
+      if (rawDayIdx < 0) {
+        document.getElementById('dailyQuoteText').innerText = `"The Jackdaw is moored in harbor. Enjoy your final evening ashore—at midnight we weigh anchor."`;
+        document.getElementById('dailyQuoteAuthor').innerText = `Voyage Eve • Launches Wednesday 00:00`;
+      } else {
+        const quoteIdx = Math.min(dayIdx, PIRATE_QUOTES.length - 1);
+        document.getElementById('dailyQuoteText').innerText = `"${PIRATE_QUOTES[quoteIdx]}"`;
+        document.getElementById('dailyQuoteAuthor').innerText = `Voyage Day ${dayIdx + 1} • Quarterdeck Orders`;
+      }
 
       const netSavings = calculateTotalSavings();
       document.getElementById('totalSavings').innerText = netSavings.toLocaleString() + ' Ft';
@@ -764,9 +762,9 @@
       const firedCount = todayLogs.length;
       renderCannonDeck(firedCount, phase.limit);
       
-      document.getElementById('phaseSubTag').innerText = phase.totalPhaseDays === "∞"
-        ? `${phase.label.toUpperCase()} • FREEDOM`
-        : `${phase.label.toUpperCase()} • DAY ${phase.dayInPhase} OF ${phase.totalPhaseDays}`;
+      document.getElementById('phaseSubTag').innerText = rawDayIdx < 0
+        ? `HARBOR PREP • LAUNCHES WED`
+        : (phase.totalPhaseDays === "∞" ? `${phase.label.toUpperCase()} • FREEDOM` : `${phase.label.toUpperCase()} • DAY ${phase.dayInPhase} OF ${phase.totalPhaseDays}`);
 
       const timerDisplay = document.getElementById('timerClock');
       const timerStatus = document.getElementById('timerStatus');
@@ -891,11 +889,8 @@
     }
 
     function resetAllData() {
-      if (confirm("Scuttle the ship and reset all plunder, battery, and voyages back to Day 1?")) {
+      if (confirm("Scuttle and clear all test logs for Wednesday's launch?")) {
         localStorage.clear();
-        const now = new Date();
-        const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-        localStorage.setItem(KEY_START_DATE, anchor.toISOString());
         logs = [];
         updateUI();
         renderLogList();
