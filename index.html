@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Taper Track</title>
   
-  <!-- Web App Manifest embedded via Data URI -->
   <link rel="manifest" href='data:application/manifest+json,{"name":"Taper Track","short_name":"Taper","start_url":".","display":"standalone","background_color":"#121212","theme_color":"#121212"}'>
 
   <style>
@@ -101,7 +100,6 @@
       margin-top: 2px;
     }
 
-    /* Timer card */
     .timer-card {
       text-align: center;
       padding: 24px 20px;
@@ -125,7 +123,6 @@
     .status-locked { color: var(--accent-red); }
     .status-ready { color: var(--accent-green); }
 
-    /* Button */
     .btn-log {
       width: 100%;
       padding: 20px;
@@ -167,7 +164,6 @@
       margin-top: 4px;
     }
 
-    /* Action bar */
     .actions {
       display: flex;
       justify-content: space-between;
@@ -185,7 +181,6 @@
       padding: 8px;
     }
 
-    /* Logs list */
     .log-list {
       max-height: 180px;
       overflow-y: auto;
@@ -208,14 +203,12 @@
 <body>
 
   <div class="container">
-    <!-- Total Savings Card -->
     <div class="card">
       <div class="title">Net Money Retained</div>
       <div class="savings-val" id="totalSavings">0 Ft</div>
       <div class="sub-stat" id="sticksAvoided">0 sticks avoided vs 15/day baseline</div>
     </div>
 
-    <!-- Daily Progress -->
     <div class="row-stats">
       <div class="stat-box">
         <div class="title">Today's Sticks</div>
@@ -223,31 +216,27 @@
       </div>
       <div class="stat-box">
         <div class="title">Current Phase</div>
-        <div class="stat-val" id="phaseLabel" style="font-size: 1.15rem; color: var(--accent-orange);">Week 1</div>
+        <div class="stat-val" id="phaseLabel" style="font-size: 1.15rem; color: var(--accent-orange);">Week 1 (Test)</div>
       </div>
     </div>
 
-    <!-- Countdown Timer Card -->
     <div class="card timer-card">
       <div class="title">Next Allowed Session</div>
       <div class="timer-display" id="timerClock">00:00</div>
-      <div class="timer-status" id="timerStatus">LOCKOUT ACTIVE</div>
+      <div class="timer-status" id="timerStatus">READY</div>
     </div>
 
-    <!-- Action Log Button -->
     <button class="btn-log btn-ready" id="logBtn" onclick="handleLog()">
       <span>LOG STICK</span>
       <span class="btn-sub" id="btnSub">Ready for session</span>
     </button>
 
-    <!-- Secondary Actions -->
     <div class="actions">
       <button class="btn-link" onclick="undoLast()">Undo Last</button>
       <button class="btn-link" onclick="toggleLogs()">View Today's Log</button>
       <button class="btn-link" onclick="resetAllData()">Reset App</button>
     </div>
 
-    <!-- Hidden Log Drawer -->
     <div class="card" id="logDrawer" style="display: none;">
       <div class="title">Today's Timestamps</div>
       <div class="log-list" id="logEntries"></div>
@@ -255,17 +244,14 @@
   </div>
 
   <script>
-    // Configuration constants
     const BASELINE_DAILY = 15;
     const PACK_PRICE = 2450;
     const STICKS_PER_PACK = 20;
     const PRICE_PER_STICK = PACK_PRICE / STICKS_PER_PACK; // 122.5 Ft
 
-    // Storage keys
     const KEY_START_TIME = 'taper_start_time';
     const KEY_LOGS = 'taper_logs';
 
-    // State initialization
     let startTime = localStorage.getItem(KEY_START_TIME);
     if (!startTime) {
       startTime = Date.now();
@@ -276,18 +262,18 @@
 
     let logs = JSON.parse(localStorage.getItem(KEY_LOGS) || '[]');
 
-    // Taper Phase definition based on days elapsed since start
+    // Test mode: intervalSec set to 5 seconds
     function getPhaseConfig() {
       const elapsedDays = Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24));
       
       if (elapsedDays < 7) {
-        return { label: "Week 1", limit: 10, intervalMin: 90 };
+        return { label: "Week 1 (Test)", limit: 10, intervalSec: 5 };
       } else if (elapsedDays < 14) {
-        return { label: "Week 2", limit: 6, intervalMin: 150 };
+        return { label: "Week 2 (Test)", limit: 6, intervalSec: 5 };
       } else if (elapsedDays < 24) {
-        return { label: "Week 3", limit: 3, intervalMin: 240 };
+        return { label: "Week 3 (Test)", limit: 3, intervalSec: 5 };
       } else {
-        return { label: "Zero Days", limit: 0, intervalMin: Infinity };
+        return { label: "Zero Days", limit: 0, intervalSec: Infinity };
       }
     }
 
@@ -301,15 +287,12 @@
       return logs.length > 0 ? logs[logs.length - 1] : null;
     }
 
-    // UI Updates
     function updateUI() {
       const now = Date.now();
       const phase = getPhaseConfig();
       const todayLogs = getTodayLogs();
       const lastLog = getLastLog();
 
-      // 1. Savings Calculation
-      // Continuous baseline: (15 sticks * 122.5 Ft / day) elapsed
       const daysElapsedExact = (now - startTime) / (1000 * 60 * 60 * 24);
       const baselineCostIncurred = daysElapsedExact * (BASELINE_DAILY * PRICE_PER_STICK);
       const actualCostIncurred = logs.length * PRICE_PER_STICK;
@@ -321,11 +304,9 @@
       document.getElementById('totalSavings').innerText = netSavings.toLocaleString() + ' Ft';
       document.getElementById('sticksAvoided').innerText = `${avoidedSticks} sticks avoided vs baseline`;
 
-      // 2. Today Count & Phase
       document.getElementById('todayCount').innerHTML = `${todayLogs.length} <span style="font-size:0.9rem; color:var(--text-muted);">/ ${phase.limit}</span>`;
       document.getElementById('phaseLabel').innerText = phase.label;
 
-      // 3. Interval & Countdown Timer
       const timerDisplay = document.getElementById('timerClock');
       const timerStatus = document.getElementById('timerStatus');
       const logBtn = document.getElementById('logBtn');
@@ -349,11 +330,10 @@
         return;
       }
 
-      const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
+      const nextAllowedTime = lastLog + (phase.intervalSec * 1000);
       const diffMs = nextAllowedTime - now;
 
       if (diffMs > 0) {
-        // Still in lockout
         const totalSec = Math.ceil(diffMs / 1000);
         const mins = Math.floor(totalSec / 60);
         const secs = totalSec % 60;
@@ -364,7 +344,6 @@
         logBtn.className = "btn-log btn-locked";
         btnSub.innerText = `Wait until timer hits 00:00`;
       } else {
-        // Window open
         timerDisplay.innerText = "00:00";
         timerStatus.innerText = "READY";
         timerStatus.className = "timer-status status-ready";
@@ -381,16 +360,14 @@
 
       if (phase.limit === 0) return;
 
-      // Check if button is tapped during lockout
       if (lastLog) {
-        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
+        const nextAllowedTime = lastLog + (phase.intervalSec * 1000);
         if (now < nextAllowedTime) {
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
           return;
         }
       }
 
-      // Log confirmed
       logs.push(now);
       localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
       if (navigator.vibrate) navigator.vibrate(80);
@@ -424,7 +401,7 @@
       }
       listEl.innerHTML = todayLogs.map((ts, idx) => {
         const d = new Date(ts);
-        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         return `<div class="log-item"><span>Stick #${todayLogs.length - idx}</span><span>${timeStr}</span></div>`;
       }).join('');
     }
@@ -440,8 +417,8 @@
       }
     }
 
-    // Refresh UI every second for accurate countdown
-    setInterval(updateUI, 1000);
+    // Polling interval kept at 200ms during testing for smooth 5s countdown
+    setInterval(updateUI, 200);
     updateUI();
   </script>
 </body>
