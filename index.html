@@ -731,4 +731,182 @@
       for (let i = 1; i <= limit; i++) {
         const isFired = i <= firedCount;
         const icon = isFired ? '💨' : '💣';
-        const statusClass = isFired
+        const statusClass = isFired ? 'cannon-slot fired' : 'cannon-slot loaded';
+        html += `
+          <div class="${statusClass}" id="cannon-slot-${i}">
+            <div class="muzzle-flash">💥</div>
+            <div class="smoke-puff">💨</div>
+            <div class="cannon-icon-wrap">
+              <div class="cannon-icon">${icon}</div>
+            </div>
+            <div class="cannon-num">#${i}</div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    }
+
+    function updateUI() {
+      const now = getNow();
+      const dayIdx = getDayIndex();
+      const phase = getPhaseConfig();
+      const todayLogs = getTodayLogs();
+      const lastLog = getLastLog();
+
+      const quoteIdx = Math.min(dayIdx, PIRATE_QUOTES.length - 1);
+      document.getElementById('dailyQuoteText').innerText = `"${PIRATE_QUOTES[quoteIdx]}"`;
+      document.getElementById('dailyQuoteAuthor').innerText = `Voyage Day ${dayIdx + 1} • Quarterdeck Orders`;
+
+      const netSavings = calculateTotalSavings();
+      document.getElementById('totalSavings').innerText = netSavings.toLocaleString() + ' Ft';
+      
+      const pct = Math.min(100, Math.round((netSavings / BOUNTY_GOAL) * 100));
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('pirateRank').innerText = getPirateRankText(netSavings);
+
+      const firedCount = todayLogs.length;
+      renderCannonDeck(firedCount, phase.limit);
+      
+      document.getElementById('phaseSubTag').innerText = phase.totalPhaseDays === "∞"
+        ? `${phase.label.toUpperCase()} • FREEDOM`
+        : `${phase.label.toUpperCase()} • DAY ${phase.dayInPhase} OF ${phase.totalPhaseDays}`;
+
+      const timerDisplay = document.getElementById('timerClock');
+      const timerStatus = document.getElementById('timerStatus');
+      const logBtn = document.getElementById('logBtn');
+      const btnMainText = document.getElementById('btnMainText');
+      const btnSub = document.getElementById('btnSub');
+
+      if (firedCount >= phase.limit && phase.limit > 0) {
+        timerDisplay.innerText = "00:00";
+        timerStatus.innerText = "ALL CANNONS SPENT";
+        timerStatus.className = "timer-status status-locked";
+
+        logBtn.className = "btn-log btn-limit-reached";
+        btnMainText.innerText = "ALL SHOTS FIRED";
+        btnSub.innerText = "Hold the line until tomorrow's sunrise";
+        return;
+      }
+
+      if (phase.limit === 0) {
+        timerDisplay.innerText = "00:00";
+        timerStatus.innerText = "THE JACKDAW SAILS CLEAN";
+        timerStatus.className = "timer-status status-ready";
+        logBtn.className = "btn-log btn-locked";
+        btnMainText.innerText = "ZERO PROTOCOL ENGAGED";
+        btnSub.innerText = "Controller active. Sink the legendary ships.";
+        return;
+      }
+
+      if (lastLog) {
+        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
+        const diffMs = nextAllowedTime - now;
+
+        if (diffMs > 0) {
+          const totalSec = Math.ceil(diffMs / 1000);
+          const mins = Math.floor(totalSec / 60);
+          const secs = totalSec % 60;
+          timerDisplay.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+          timerStatus.innerText = "HOURGLASS DRAINING (LOCKOUT)";
+          timerStatus.className = "timer-status status-locked";
+
+          logBtn.className = "btn-log btn-locked";
+          btnMainText.innerText = "SWABBING BARRELS...";
+          btnSub.innerText = "Wait until the powder cools";
+          return;
+        }
+      }
+
+      timerDisplay.innerText = "00:00";
+      timerStatus.innerText = "READY TO BOARD";
+      timerStatus.className = "timer-status status-ready";
+      logBtn.className = "btn-log btn-ready";
+      btnMainText.innerText = "💣 FIRE CANNONS";
+      btnSub.innerText = `Cannon #${firedCount + 1} loaded & primed`;
+    }
+
+    function handleLog() {
+      const now = getNow();
+      const phase = getPhaseConfig();
+      const todayLogs = getTodayLogs();
+      const lastLog = getLastLog();
+
+      if (todayLogs.length >= phase.limit) {
+        if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+        return;
+      }
+
+      if (lastLog) {
+        const nextAllowedTime = lastLog + (phase.intervalMin * 60 * 1000);
+        if (now < nextAllowedTime) {
+          if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+          return;
+        }
+      }
+
+      document.body.classList.remove('ship-broadside-shake');
+      void document.body.offsetWidth;
+      document.body.classList.add('ship-broadside-shake');
+
+      const targetSlotNum = todayLogs.length + 1;
+      const slotEl = document.getElementById(`cannon-slot-${targetSlotNum}`);
+      if (slotEl) {
+        slotEl.classList.add('recoil-active');
+      }
+
+      logs.push(now);
+      localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
+      
+      if (navigator.vibrate) navigator.vibrate([120, 40, 160, 30, 80]);
+
+      renderLogList();
+      setTimeout(updateUI, 420);
+    }
+
+    function undoLast() {
+      if (logs.length === 0) return;
+      if (confirm("Belay the last cannon shot from the ship's log?")) {
+        logs.pop();
+        localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
+        renderLogList();
+        updateUI();
+      }
+    }
+
+    function toggleLogs() {
+      const drawer = document.getElementById('logDrawer');
+      drawer.style.display = drawer.style.display === 'none' ? 'flex' : 'none';
+      renderLogList();
+    }
+
+    function renderLogList() {
+      const listEl = document.getElementById('logEntries');
+      const todayLogs = getTodayLogs().reverse();
+      if (todayLogs.length === 0) {
+        listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No shots fired today, Captain.</div>';
+        return;
+      }
+      listEl.innerHTML = todayLogs.map((ts, idx) => {
+        const d = new Date(ts);
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `<div class="log-item"><span>Cannon #${todayLogs.length - idx}</span><span>${timeStr}</span></div>`;
+      }).join('');
+    }
+
+    function resetAllData() {
+      if (confirm("Scuttle the ship and reset all plunder, battery, and voyages back to Day 1?")) {
+        localStorage.clear();
+        const now = new Date();
+        const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        localStorage.setItem(KEY_START_DATE, anchor.toISOString());
+        logs = [];
+        updateUI();
+        renderLogList();
+      }
+    }
+
+    setInterval(updateUI, 1000);
+    updateUI();
+  </script>
+</body>
+</html>
