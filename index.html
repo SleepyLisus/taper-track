@@ -416,8 +416,8 @@
 
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 5px;
     }
 
     .btn-link {
@@ -425,9 +425,9 @@
       border: 1px solid var(--card-border);
       border-radius: 8px;
       color: var(--text-muted);
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       cursor: pointer;
-      padding: 8px 4px;
+      padding: 8px 2px;
       text-align: center;
     }
 
@@ -437,7 +437,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -453,7 +453,7 @@
       padding: 18px;
       display: flex;
       flex-direction: column;
-      max-height: 70dvh;
+      max-height: 75dvh;
     }
 
     .log-list {
@@ -471,6 +471,45 @@
       color: var(--text-muted);
       padding: 6px 0;
       border-bottom: 1px solid #1a1f27;
+    }
+
+    .retro-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .retro-btn {
+      background: #181d26;
+      border: 1px solid #28303d;
+      color: var(--accent-gold-bright);
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .retro-btn:active {
+      background: #222938;
+      border-color: var(--accent-gold);
+    }
+
+    .custom-time-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .custom-time-input {
+      background: #181d26;
+      border: 1px solid #28303d;
+      color: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      flex: 1;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -505,7 +544,7 @@
     <div class="card gundeck-card">
       <div class="title">
         <span id="gundeckTitle">BROADSIDE BATTERY</span>
-        <span class="pirate-tag" id="phaseSubTag">WEEK 1 • DAY 1 OF 9</span>
+        <span class="pirate-tag" id="phaseSubTag">WEEK 1 • DAY 1 OF 7</span>
       </div>
       <div class="cannon-grid" id="cannonGrid"></div>
     </div>
@@ -522,19 +561,45 @@
     </button>
 
     <div class="actions">
+      <button class="btn-link" onclick="toggleRetroModal()">+ Forgot</button>
       <button class="btn-link" onclick="undoLast()">Belay Last</button>
       <button class="btn-link" onclick="toggleLogs()">Ship's Log</button>
       <button class="btn-link" onclick="resetAllData()">Scuttle</button>
     </div>
   </div>
 
+  <!-- TODAY LOGS MODAL -->
   <div class="modal-overlay" id="logModal" onclick="toggleLogs()">
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="title">
-        <span>CAPTAIN'S LOG (TODAY)</span>
+        <span>CAPTAIN'S LOG (ACTIVE WATCH)</span>
         <span style="cursor:pointer; color:var(--accent-gold-bright);" onclick="toggleLogs()">✕ CLOSE</span>
       </div>
       <div class="log-list" id="logEntries"></div>
+    </div>
+  </div>
+
+  <!-- FORGOT TO LOG MODAL -->
+  <div class="modal-overlay" id="retroModal" onclick="toggleRetroModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="title">
+        <span>RETROACTIVE SALVO</span>
+        <span style="cursor:pointer; color:var(--accent-gold-bright);" onclick="toggleRetroModal()">✕ CLOSE</span>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">
+        Fired earlier without logging? Record the past shot below.
+      </div>
+      <div class="retro-grid">
+        <button class="retro-btn" onclick="logMinutesAgo(15)">15 min ago</button>
+        <button class="retro-btn" onclick="logMinutesAgo(30)">30 min ago</button>
+        <button class="retro-btn" onclick="logMinutesAgo(45)">45 min ago</button>
+        <button class="retro-btn" onclick="logMinutesAgo(60)">1 hour ago</button>
+      </div>
+      <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase;">Or exact watch time:</div>
+      <div class="custom-time-row">
+        <input type="time" id="customTimePicker" class="custom-time-input">
+        <button class="retro-btn" style="flex:1;" onclick="logCustomTime()">Log</button>
+      </div>
     </div>
   </div>
 
@@ -608,6 +673,7 @@
     const STICKS_PER_PACK = 20;
     const PRICE_PER_STICK = PACK_PRICE / STICKS_PER_PACK; // 122.5 Ft
     const BOUNTY_GOAL = 20000;
+    const CUTOFF_HOUR = 2; // 02:00 AM day rollover
 
     const PIRATE_QUOTES = [
       "The fog is thick and the crew is unruly. Ten shots in the locker, lad. Make every broadside count.",
@@ -616,30 +682,23 @@
       "Dead men tell no tales, and bored sailors make poor decisions. Find a task for your hands afore the devil finds one for ye.",
       "Look at the horizon, not the empty powder kegs. Five days in and the Jackdaw is still afloat.",
       "Work week ahead. When the landlubbers step outside to burn their coin, remain steady at the helm.",
-      "One full week carved into the mast. Five avoided shots a day adds up to a heavy chest of gold.",
-      "The wind shifts. Two days remain before the quartermaster cuts our rations to single digits. Steel your nerves.",
-      "Final day of ten. Feast on what ye have, Captain—tomorrow the true voyage begins.",
+      "Final day of ten! The ramped-up schedule begins tomorrow—prepare the decks for six shots.",
       "Six cannon balls. That is all the powder in the hold today. Delay the first salvo until high noon.",
       "A weekend with light stores is a test of iron. Drink your grog, keep the cannons cool, and eye the bounty.",
       "Halfway across the Spanish Main. The war chest is groaning with real coin that never reached the Governor's pockets.",
       "The phantom urge is nothing but a siren’s song. Plug your ears with wax and steer straight.",
-      "Two weeks at sea. Your lungs take in the ocean spray without wheezing like a ruptured bellows.",
-      "Six shots felt impossible fourteen days ago. Today it's just another routine watch. Steady as she goes.",
-      "Prepare the decks. Tomorrow we enter the doldrums: three rations and three rations alone.",
+      "Sunday watch. Six shots felt impossible days ago—tomorrow we enter the squeeze: three rations.",
       "Three shots. Morning is banned. One for the midday sun, one for the dogwatch, one before turning in.",
       "The fog clears and Nassau draws near. Every craving today is just a boarding party ye have to repel.",
       "Over 15,000 Ft sitting locked in the hold. You are buying your own freedom from the tobacco merchants.",
-      "Four days till Zero. The cravings bark, but they have no teeth left. Stand your ground.",
-      "Look aft at the wake you left behind. Hundreds of avoided sticks rotting at the bottom of the sea.",
-      "Forty-eight hours to landfall. The crew is quiet. Clean the ship's brass and prep the quarterdeck.",
       "The Eve of Nassau. Fire the final stick into the dark water tonight, lock the holder in irons, and take the helm.",
-      "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Edward Kenway—drop anchor and claim the prize."
+      "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Captain—drop anchor and claim the prize."
     ];
 
     const KEY_LOGS = 'taper_logs';
 
-    // Hardcoded anchor to Wednesday, Nov 4, 2026 at 00:00:00 local time
-    const anchorDate = new Date(2026, 10, 4, 0, 0, 0);
+    // Anchor launch: Wednesday, Nov 4, 2026 at 02:00:00 local time
+    const anchorDate = new Date(2026, 10, 4, CUTOFF_HOUR, 0, 0);
 
     let logs = JSON.parse(localStorage.getItem(KEY_LOGS) || '[]');
 
@@ -647,47 +706,64 @@
       return Date.now();
     }
 
+    /**
+     * Shifts reference time by CUTOFF_HOUR (2 AM) so 00:00 to 01:59 counts as yesterday.
+     */
+    function getLogicalDate(timestamp = Date.now()) {
+      const d = new Date(timestamp);
+      d.setHours(d.getHours() - CUTOFF_HOUR);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
     function getDayIndex() {
       const now = new Date();
-      const diffMs = now.getTime() - anchorDate.getTime();
+      now.setHours(now.getHours() - CUTOFF_HOUR);
+      const start = new Date(anchorDate);
+      start.setHours(start.getHours() - CUTOFF_HOUR);
+      const diffMs = now.getTime() - start.getTime();
       return Math.floor(diffMs / (1000 * 60 * 60 * 24));
     }
 
+    /**
+     * Ramped up timeline:
+     * Phase 1: 7 days @ 10/day (Wed Nov 4 - Tue Nov 10)
+     * Phase 2: 5 days @ 6/day  (Wed Nov 11 - Sun Nov 15)
+     * Phase 3: 4 days @ 3/day  (Mon Nov 16 - Thu Nov 19)
+     * Zero Protocol: Friday Nov 20 onwards
+     */
     function getPhaseConfig() {
       const dayIdx = Math.max(0, getDayIndex());
 
-      if (dayIdx < 9) {
-        return { label: "Week 1", limit: 10, intervalMin: 90, dayInPhase: dayIdx + 1, totalPhaseDays: 9 };
+      if (dayIdx < 7) {
+        return { label: "Week 1", limit: 10, intervalMin: 90, dayInPhase: dayIdx + 1, totalPhaseDays: 7 };
+      } else if (dayIdx < 12) {
+        return { label: "Week 2", limit: 6, intervalMin: 150, dayInPhase: (dayIdx - 7) + 1, totalPhaseDays: 5 };
       } else if (dayIdx < 16) {
-        return { label: "Week 2", limit: 6, intervalMin: 150, dayInPhase: (dayIdx - 9) + 1, totalPhaseDays: 7 };
-      } else if (dayIdx < 23) {
-        return { label: "Week 3", limit: 3, intervalMin: 240, dayInPhase: (dayIdx - 16) + 1, totalPhaseDays: 7 };
+        return { label: "The Squeeze", limit: 3, intervalMin: 240, dayInPhase: (dayIdx - 12) + 1, totalPhaseDays: 4 };
       } else {
-        return { label: "Zero Protocol", limit: 0, intervalMin: Infinity, dayInPhase: (dayIdx - 23) + 1, totalPhaseDays: "∞" };
+        return { label: "Zero Protocol", limit: 0, intervalMin: Infinity, dayInPhase: (dayIdx - 16) + 1, totalPhaseDays: "∞" };
       }
     }
 
     function getTodayLogs() {
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
-      const endOfDay = startOfDay + (24 * 60 * 60 * 1000);
-      return logs.filter(ts => ts >= startOfDay && ts < endOfDay);
+      const currentLogical = getLogicalDate(getNow());
+      return logs.filter(ts => getLogicalDate(ts) === currentLogical);
     }
 
     function getLastLog() {
-      const today = getTodayLogs();
-      return today.length > 0 ? today[today.length - 1] : null;
+      // Cooldown calculates off the latest physical smoke anywhere in logs
+      return logs.length > 0 ? Math.max(...logs) : null;
     }
 
     function calculateTotalSavings() {
       const rawDayIdx = getDayIndex();
-      if (rawDayIdx <= 0) return 0; // Pre-voyage (Tuesday) or Day 1 active = 0 banked
+      if (rawDayIdx <= 0) return 0;
 
       let totalAvoidedSticks = 0;
       for (let d = 0; d < rawDayIdx; d++) {
-        const dayStart = anchorDate.getTime() + (d * 24 * 60 * 60 * 1000);
-        const dayEnd = dayStart + (24 * 60 * 60 * 1000);
-        const daySticks = logs.filter(ts => ts >= dayStart && ts < dayEnd).length;
+        const checkDay = new Date(anchorDate.getTime() + (d * 24 * 60 * 60 * 1000));
+        const logicalKey = getLogicalDate(checkDay.getTime());
+        const daySticks = logs.filter(ts => getLogicalDate(ts) === logicalKey).length;
         
         const savedToday = Math.max(0, BASELINE_DAILY - daySticks);
         totalAvoidedSticks += savedToday;
@@ -744,8 +820,8 @@
       const lastLog = getLastLog();
 
       if (rawDayIdx < 0) {
-        document.getElementById('dailyQuoteText').innerText = `"The Jackdaw is moored in harbor. Enjoy your final evening ashore—at midnight we weigh anchor."`;
-        document.getElementById('dailyQuoteAuthor').innerText = `Voyage Eve • Launches Wednesday 00:00`;
+        document.getElementById('dailyQuoteText').innerText = `"The Jackdaw is moored in harbor. Enjoy your final evening ashore—at 2 AM we weigh anchor."`;
+        document.getElementById('dailyQuoteAuthor').innerText = `Voyage Eve • Launches Wednesday`;
       } else {
         const quoteIdx = Math.min(dayIdx, PIRATE_QUOTES.length - 1);
         document.getElementById('dailyQuoteText').innerText = `"${PIRATE_QUOTES[quoteIdx]}"`;
@@ -779,7 +855,7 @@
 
         logBtn.className = "btn-log btn-limit-reached";
         btnMainText.innerText = "ALL SHOTS FIRED";
-        btnSub.innerText = "Hold the line until tomorrow's sunrise";
+        btnSub.innerText = "Hold the line until 02:00 reset";
         return;
       }
 
@@ -789,7 +865,7 @@
         timerStatus.className = "timer-status status-ready";
         logBtn.className = "btn-log btn-locked";
         btnMainText.innerText = "ZERO PROTOCOL ENGAGED";
-        btnSub.innerText = "Controller active. Sink the legendary ships.";
+        btnSub.innerText = "Plunder secured. Winter car funded.";
         return;
       }
 
@@ -818,6 +894,14 @@
       logBtn.className = "btn-log btn-ready";
       btnMainText.innerText = "💣 FIRE CANNONS";
       btnSub.innerText = `Cannon #${firedCount + 1} loaded & primed`;
+    }
+
+    function recordEntry(timestampMs) {
+      logs.push(timestampMs);
+      logs.sort((a, b) => a - b);
+      localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
+      renderLogList();
+      setTimeout(updateUI, 100);
     }
 
     function handleLog() {
@@ -849,13 +933,32 @@
         slotEl.classList.add('recoil-active');
       }
 
-      logs.push(now);
-      localStorage.setItem(KEY_LOGS, JSON.stringify(logs));
-      
+      recordEntry(now);
       if (navigator.vibrate) navigator.vibrate([120, 40, 160, 30, 80]);
+    }
 
-      renderLogList();
-      setTimeout(updateUI, 420);
+    function logMinutesAgo(mins) {
+      const targetTime = getNow() - (mins * 60 * 1000);
+      recordEntry(targetTime);
+      toggleRetroModal();
+    }
+
+    function logCustomTime() {
+      const picker = document.getElementById('customTimePicker');
+      if (!picker.value) return;
+
+      const [hours, minutes] = picker.value.split(':').map(Number);
+      const target = new Date();
+      target.setHours(hours, minutes, 0, 0);
+
+      // If time entered is ahead of current time, assume it was earlier during the late watch
+      if (target.getTime() > Date.now()) {
+        target.setDate(target.getDate() - 1);
+      }
+
+      recordEntry(target.getTime());
+      picker.value = '';
+      toggleRetroModal();
     }
 
     function undoLast() {
@@ -874,9 +977,14 @@
       renderLogList();
     }
 
+    function toggleRetroModal() {
+      const modal = document.getElementById('retroModal');
+      modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+    }
+
     function renderLogList() {
       const listEl = document.getElementById('logEntries');
-      const todayLogs = getTodayLogs().reverse();
+      const todayLogs = [...getTodayLogs()].reverse();
       if (todayLogs.length === 0) {
         listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted); padding: 10px 0;">No shots fired today, Captain.</div>';
         return;
@@ -889,7 +997,7 @@
     }
 
     function resetAllData() {
-      if (confirm("Scuttle and clear all test logs for Wednesday's launch?")) {
+      if (confirm("Scuttle and clear all logs? This cannot be undone.")) {
         localStorage.clear();
         logs = [];
         updateUI();
