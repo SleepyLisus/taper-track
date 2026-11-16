@@ -605,6 +605,10 @@
 
   <script>
     (function setupPWA() {
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+
       function generatePngIcon(size) {
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -706,9 +710,6 @@
       return Date.now();
     }
 
-    /**
-     * Shifts reference time by CUTOFF_HOUR (2 AM) so 00:00 to 01:59 counts as yesterday.
-     */
     function getLogicalDate(timestamp = Date.now()) {
       const d = new Date(timestamp);
       d.setHours(d.getHours() - CUTOFF_HOUR);
@@ -724,13 +725,6 @@
       return Math.floor(diffMs / (1000 * 60 * 60 * 24));
     }
 
-    /**
-     * Ramped up timeline:
-     * Phase 1: 7 days @ 10/day (Wed Nov 4 - Tue Nov 10)
-     * Phase 2: 5 days @ 6/day  (Wed Nov 11 - Sun Nov 15)
-     * Phase 3: 4 days @ 3/day  (Mon Nov 16 - Thu Nov 19)
-     * Zero Protocol: Friday Nov 20 onwards
-     */
     function getPhaseConfig() {
       const dayIdx = Math.max(0, getDayIndex());
 
@@ -751,7 +745,6 @@
     }
 
     function getLastLog() {
-      // Cooldown calculates off the latest physical smoke anywhere in logs
       return logs.length > 0 ? Math.max(...logs) : null;
     }
 
@@ -759,17 +752,18 @@
       const rawDayIdx = getDayIndex();
       if (rawDayIdx <= 0) return 0;
 
-      let totalAvoidedSticks = 0;
+      let totalAvoided = 0;
       for (let d = 0; d < rawDayIdx; d++) {
-        const checkDay = new Date(anchorDate.getTime() + (d * 24 * 60 * 60 * 1000));
-        const logicalKey = getLogicalDate(checkDay.getTime());
-        const daySticks = logs.filter(ts => getLogicalDate(ts) === logicalKey).length;
-        
-        const savedToday = Math.max(0, BASELINE_DAILY - daySticks);
-        totalAvoidedSticks += savedToday;
+        let dayLimit = 0;
+        if (d < 7) dayLimit = 10;        // Week 1: 5 avoided/day
+        else if (d < 12) dayLimit = 6;   // Week 2: 9 avoided/day
+        else if (d < 16) dayLimit = 3;   // The Squeeze: 12 avoided/day
+        // d >= 16 (Nov 20+): 0 limit -> 15 avoided/day
+
+        totalAvoided += (BASELINE_DAILY - dayLimit);
       }
 
-      return Math.round(totalAvoidedSticks * PRICE_PER_STICK);
+      return Math.round(totalAvoided * PRICE_PER_STICK);
     }
 
     function getPirateRankText(savedFt) {
@@ -951,7 +945,6 @@
       const target = new Date();
       target.setHours(hours, minutes, 0, 0);
 
-      // If time entered is ahead of current time, assume it was earlier during the late watch
       if (target.getTime() > Date.now()) {
         target.setDate(target.getDate() - 1);
       }
