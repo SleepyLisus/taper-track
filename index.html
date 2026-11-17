@@ -187,7 +187,7 @@
 
     .cannon-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin-top: 8px;
     }
@@ -691,11 +691,19 @@
       "A weekend with light stores is a test of iron. Drink your grog, keep the cannons cool, and eye the bounty.",
       "Halfway across the Spanish Main. The war chest is groaning with real coin that never reached the Governor's pockets.",
       "The phantom urge is nothing but a siren’s song. Plug your ears with wax and steer straight.",
-      "Sunday watch. Six shots felt impossible days ago—tomorrow we enter the squeeze: three rations.",
+      "Sunday watch. Six shots felt impossible days ago—tomorrow we drop to four steady rations.",
+      "Four shots. Steady three-hour spacing from mid-morning to nightcap—smooth sailing down from six.",
+      "Holding the line at four. Every skipped morning stick keeps the powder dry for the evening watch.",
+      "Mid-week steady on four rations. The body adapts fast when you don't force a cliff.",
+      "Over 14,000 Ft locked in the war chest. Four shots a day is already your new normal.",
+      "Friday watch on four cannons. Enjoy the smooth rhythm—one more weekend before the final three-shot squeeze.",
+      "Weekend watch on four rations. Keep your hands busy and let the gold pile up.",
+      "Final day of four! Tomorrow we enter the final squeeze: three rations before Friday's Zero Hour.",
       "Three shots. Morning is banned. One for the midday sun, one for the dogwatch, one before turning in.",
       "The fog clears and Nassau draws near. Every craving today is just a boarding party ye have to repel.",
-      "Over 15,000 Ft sitting locked in the hold. You are buying your own freedom from the tobacco merchants.",
-      "The Eve of Nassau. Fire the final stick into the dark water tonight, lock the holder in irons, and take the helm.",
+      "Over 20,000 Ft secured in the hold—bounty claimed! Just two days left until Zero Hour.",
+      "The Eve of Nassau. Tomorrow at noon you fire the final shot into the sea and take the helm clean.",
+      "Final Salvo Day. Fire your last stick at high noon, lock the holder in irons, and ride the weekend clear.",
       "Full sails, clear skies, not a puff of smoke on deck. The 20,000 bounty is yours, Captain—drop anchor and claim the prize."
     ];
 
@@ -729,13 +737,23 @@
       const dayIdx = Math.max(0, getDayIndex());
 
       if (dayIdx < 7) {
+        // Days 0–6 (Nov 4 – Nov 10): 10/day
         return { label: "Week 1", limit: 10, intervalMin: 90, dayInPhase: dayIdx + 1, totalPhaseDays: 7 };
       } else if (dayIdx < 12) {
+        // Days 7–11 (Nov 11 – Nov 15): 6/day
         return { label: "Week 2", limit: 6, intervalMin: 150, dayInPhase: (dayIdx - 7) + 1, totalPhaseDays: 5 };
-      } else if (dayIdx < 16) {
-        return { label: "The Squeeze", limit: 3, intervalMin: 240, dayInPhase: (dayIdx - 12) + 1, totalPhaseDays: 4 };
+      } else if (dayIdx < 19) {
+        // Days 12–18 (Nov 16 – Nov 22): 4/day (buffer week)
+        return { label: "Week 3", limit: 4, intervalMin: 180, dayInPhase: (dayIdx - 12) + 1, totalPhaseDays: 7 };
+      } else if (dayIdx < 23) {
+        // Days 19–22 (Nov 23 – Nov 26): 3/day
+        return { label: "The Squeeze", limit: 3, intervalMin: 240, dayInPhase: (dayIdx - 19) + 1, totalPhaseDays: 4 };
+      } else if (dayIdx === 23) {
+        // Day 23 (Friday, Nov 27): 1 final noon salvo before weekend withdrawal
+        return { label: "Zero Hour", limit: 1, intervalMin: 240, dayInPhase: 1, totalPhaseDays: 1 };
       } else {
-        return { label: "Zero Protocol", limit: 0, intervalMin: Infinity, dayInPhase: (dayIdx - 16) + 1, totalPhaseDays: "∞" };
+        // Day 24+ (Saturday, Nov 28+): Zero Protocol
+        return { label: "Zero Protocol", limit: 0, intervalMin: Infinity, dayInPhase: (dayIdx - 24) + 1, totalPhaseDays: "∞" };
       }
     }
 
@@ -755,10 +773,12 @@
       let totalAvoided = 0;
       for (let d = 0; d < rawDayIdx; d++) {
         let dayLimit = 0;
-        if (d < 7) dayLimit = 10;        // Week 1: 5 avoided/day
-        else if (d < 12) dayLimit = 6;   // Week 2: 9 avoided/day
-        else if (d < 16) dayLimit = 3;   // The Squeeze: 12 avoided/day
-        // d >= 16 (Nov 20+): 0 limit -> 15 avoided/day
+        if (d < 7) dayLimit = 10;         // Week 1: 5 avoided/day
+        else if (d < 12) dayLimit = 6;    // Week 2: 9 avoided/day
+        else if (d < 19) dayLimit = 4;    // Week 3: 11 avoided/day
+        else if (d < 23) dayLimit = 3;    // The Squeeze: 12 avoided/day
+        else if (d === 23) dayLimit = 1;  // Friday Nov 27 Zero Hour: 14 avoided
+        // d >= 24 (Nov 28+): 0 limit -> 15 avoided/day
 
         totalAvoided += (BASELINE_DAILY - dayLimit);
       }
@@ -784,7 +804,10 @@
         return;
       }
 
-      grid.style.gridTemplateColumns = limit === 3 ? "repeat(3, 1fr)" : (limit === 6 ? "repeat(3, 1fr)" : "repeat(5, 1fr)");
+      if (limit === 1) grid.style.gridTemplateColumns = "1fr";
+      else if (limit === 3 || limit === 6) grid.style.gridTemplateColumns = "repeat(3, 1fr)";
+      else if (limit === 4) grid.style.gridTemplateColumns = "repeat(4, 1fr)";
+      else grid.style.gridTemplateColumns = "repeat(5, 1fr)";
       
       let html = '';
       for (let i = 1; i <= limit; i++) {
@@ -844,12 +867,12 @@
 
       if (firedCount >= phase.limit && phase.limit > 0) {
         timerDisplay.innerText = "00:00";
-        timerStatus.innerText = "ALL CANNONS SPENT";
+        timerStatus.innerText = phase.limit === 1 ? "FINAL SALVO FIRED" : "ALL CANNONS SPENT";
         timerStatus.className = "timer-status status-locked";
 
         logBtn.className = "btn-log btn-limit-reached";
-        btnMainText.innerText = "ALL SHOTS FIRED";
-        btnSub.innerText = "Hold the line until 02:00 reset";
+        btnMainText.innerText = phase.limit === 1 ? "ZERO PROTOCOL ENGAGED" : "ALL SHOTS FIRED";
+        btnSub.innerText = phase.limit === 1 ? "Hold fast through the weekend" : "Hold the line until 02:00 reset";
         return;
       }
 
@@ -886,8 +909,8 @@
       timerStatus.innerText = "READY TO BOARD";
       timerStatus.className = "timer-status status-ready";
       logBtn.className = "btn-log btn-ready";
-      btnMainText.innerText = "💣 FIRE CANNONS";
-      btnSub.innerText = `Cannon #${firedCount + 1} loaded & primed`;
+      btnMainText.innerText = phase.limit === 1 ? "💣 FIRE FINAL SALVO" : "💣 FIRE CANNONS";
+      btnSub.innerText = phase.limit === 1 ? "Save for 12:00 PM noon" : `Cannon #${firedCount + 1} loaded & primed`;
     }
 
     function recordEntry(timestampMs) {
